@@ -19,16 +19,17 @@ heuristic_type: PathCostHeuristic
 planner_type: ARAPlanner
 
 # search until a specific time limit is reached or first solution is found
-search_until_first_solution: True
-#search_until_first_solution: True
+search_until_first_solution: False
+# search_until_first_solution: True
 
 # the maximum search time if search_until_first_solution is set to False
-allocated_time: 7.0
+allocated_time: 15.0
+# allocated_time: 5.0
 
 initial_epsilon: 8.0
 
-forward_search: False
+forward_search: True
 
 # the limit of changed states that decides whether to replan or to start a hole
 # new planning task
-changed_cells_limit: 20000
+changed_cells_limit: 200000

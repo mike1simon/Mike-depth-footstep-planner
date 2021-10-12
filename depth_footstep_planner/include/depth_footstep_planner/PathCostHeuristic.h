@@ -1,12 +1,12 @@
 
 #ifndef DEPTH_FOOTSTEP_PLANNER_PATHCOSTHEURISTIC_H_
 #define DEPTH_FOOTSTEP_PLANNER_PATHCOSTHEURISTIC_H_
+#include <sbpl_edit/Depth2Dgridsearch.h>
 
 #include <depth_footstep_planner/Heuristic.h>
 #include <depthmap_humanoid_msgs/depthmap2d.h>
 #include <sbpl/headers.h>
 #include <depth_footstep_planner/helper.h>
-
 
 namespace depth_footstep_planner
 {
@@ -24,6 +24,9 @@ namespace depth_footstep_planner
  *  + The difference between the orientation of the two states multiplied
  *    by some cost factor.
  */
+
+#include <sbpl_edit/Depth2Dgridsearch.h>
+
 class PathCostHeuristic : public Heuristic
 {
 public:
@@ -59,7 +62,8 @@ public:
 private:
   static const int cvObstacleThreshold = 200;
 
-//  unsigned char** ivpGrid;
+  unsigned char** ivpGrid;
+  float** ivpDepth2D;
 
   double ivStepCost;
   double ivDiffAngleCost;
@@ -72,8 +76,9 @@ private:
   int ivGoalY;
 
   depthmap2d::DepthMap2DPtr ivMapPtr;
-//  boost::shared_ptr<SBPL2DGridSearch> ivGridSearchPtr;
-
+//  boost::shared_ptr<DEPTH2DGridSearch> ivGridSearchPtr;
+  boost::shared_ptr<sbpl_edit::DEPTH2DGridSearch> ivGridSearchPtr;
+//  sbpl_edit::DEPTH2DGridSearch ivGridSearchPtr;
   void resetGrid();
 };
 }

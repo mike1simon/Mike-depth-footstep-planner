@@ -743,8 +743,9 @@ FootstepPlannerEnvironment::GetPreds(int TargetStateID,
     /// could change the const part which is the parameter for the
     /// createHashEntryIfNotExists
     const PlanningState* predecessor_hash = createHashEntryIfNotExists(predecessor);
-
+    // !! change this to take fromToCost instead of step cost
     int cost = stepCost(*current, *predecessor_hash);
+    // int cost = GetFromToHeuristic(*current,*predecessor_hash) + ivStepCost; // 3
     PredIDV->push_back(predecessor_hash->getId());
     CostV->push_back(cost);
   }
@@ -857,6 +858,8 @@ FootstepPlannerEnvironment::GetSuccs(int SourceStateID,
         createHashEntryIfNotExists(successor);
 
     int cost = stepCost(*current, *successor_hash_entry);
+    // int cost = GetFromToHeuristic(*current,*successor_hash_entry) + ivStepCost; // 1
+
     SuccIDV->push_back(successor_hash_entry->getId());
     CostV->push_back(cost);
   }
@@ -904,6 +907,7 @@ FootstepPlannerEnvironment::GetSuccsTo(int SourceStateID, int goalStateId,
     }
 
     const PlanningState* goal = ivStateId2State[goal_id];
+    
     int cost = stepCost(*current, *goal);
     SuccIDV->push_back(goal_id);
     CostV->push_back(cost);
@@ -944,6 +948,7 @@ FootstepPlannerEnvironment::GetSuccsTo(int SourceStateID, int goalStateId,
     const PlanningState* successor_hash = createHashEntryIfNotExists(successor);
 
     int cost = stepCost(*current, *successor_hash);
+    // int cost = GetFromToHeuristic(*current,*successor_hash) + ivStepCost; // 2
     SuccIDV->push_back(successor_hash->getId());
     CostV->push_back(cost);
   }

@@ -68,7 +68,7 @@ bool collision_check(int x, int y, int theta, double& new_depth,
     new_depth = get_depth(x,y,depth_map.depthMap());
     return false;
   }
-  // need to implement other steps
+  // need to =implement other steps
   else {
     ROS_ERROR("NO METHOD FOR collision_check SELECTED");
     return true;}

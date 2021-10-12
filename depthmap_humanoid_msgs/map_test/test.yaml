@@ -1,0 +1,8 @@
+image: test2.png
+#image: step8D.png
+#image: test2.png
+resolution: 0.005
+origin: [0.0, 0.0, 0.0]
+skip_pixels_in_pointcloud: [10,10]
+max_attitude: 4.0
+min_attitude: 0.0
