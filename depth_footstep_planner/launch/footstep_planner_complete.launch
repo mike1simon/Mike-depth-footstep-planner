@@ -1,0 +1,10 @@
+<launch>
+
+  <node name="map_server" pkg="depthmap_humanoid_msgs" type="map_server" args="$(find depthmap_humanoid_msgs)/map_test/test.yaml" />
+  <node name="depth_footstep_planner" pkg="depth_footstep_planner" type="footstep_planner_node" output="screen" >
+    <rosparam file="$(find depth_footstep_planner)/config/planning_params.yaml" command="load" />
+    <rosparam file="$(find depth_footstep_planner)/config/planning_params_asimo.yaml" command="load" />
+    <rosparam file="$(find depth_footstep_planner)/config/footsteps_asimo.yaml" command="load" />
+  </node>
+  <node name="rviz" pkg="rviz" type="rviz" args="-d $(find depth_footstep_planner)/config/footstep_config.rviz" />
+</launch>
