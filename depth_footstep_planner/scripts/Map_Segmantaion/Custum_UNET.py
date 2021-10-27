@@ -211,7 +211,7 @@ class Custom_UNET_Model(nn.Module):
 #     return
 
 class Map_Seg_Server:
-    def __init__(self,model_name = "model1.pth", root_path = None,
+    def __init__(self,model_name = "model2.pth", root_path = None,
              device = None, data_transforms = None, 
              output_pub_name = "/model_output", vis_pub_name = "/model_output_vis",
              sub_name = "/model_input", service_name = "/Map_Seg_service"):
@@ -240,8 +240,8 @@ class Map_Seg_Server:
 
         self.load_model()
 
-        self.output_pub = rospy.Publisher(output_pub_name,Image,latch=True)
-        self.vis_pub = rospy.Publisher(vis_pub_name,OccupancyGrid,latch=True)
+        self.output_pub = rospy.Publisher(output_pub_name,Image,queue_size=10,latch=True)
+        self.vis_pub = rospy.Publisher(vis_pub_name,OccupancyGrid,queue_size=10,latch=True)
         self.Map_Seg_sub = rospy.Subscriber(sub_name, Image, self.Map_Seg_cb)
         # self.Service = rospy.Service(service_name, My_Service_Class)
     
@@ -275,7 +275,7 @@ class Map_Seg_Server:
         self.model = Custom_UNET_Model().to(self.device)
         if criterion is not None:
             self.criterion = criterion
-        print(self.model_path)
+        print("loaded model from: ", self.model_path)
         self.model.load_state_dict(torch.load(self.model_path))
         # self.model.load_state_dict(self.model_path)
         return self.model
