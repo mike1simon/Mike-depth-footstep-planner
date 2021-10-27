@@ -26,22 +26,22 @@ from nav_msgs.msg import OccupancyGrid, MapMetaData
 from cv_bridge import CvBridge
 import sensor_msgs
 from sensor_msgs.msg import Image
-
+from std_msgs.msg import Header
 # from typing import List # for specifing List type and autocomplete for it
 
-def scale_image(image : np.ndarray):
-    # grab the image dimensions
-    h = image.shape[0]
-    w = image.shape[1]
-    new_image: np.ndarray = np.zeros((int(image.shape[0]/2),int(image.shape[1]/2)),image.dtype)
-    # loop over the image, pixel by pixel
-    for y in range(0, h,2):
-        for x in range(0, w,2):
-            # threshold the pixel
-            new_image[int(y/2), int(x/2)] = image[y, x,0]
+# def scale_image(image : np.ndarray):
+#     # grab the image dimensions
+#     h = image.shape[0]
+#     w = image.shape[1]
+#     new_image: np.ndarray = np.zeros((int(image.shape[0]/2),int(image.shape[1]/2)),image.dtype)
+#     # loop over the image, pixel by pixel
+#     for y in range(0, h,2):
+#         for x in range(0, w,2):
+#             # threshold the pixel
+#             new_image[int(y/2), int(x/2)] = image[y, x,0]
             
-    # return the thresholded image
-    return new_image
+#     # return the thresholded image
+#     return new_image
 
         
 class conv_block(nn.Module):
@@ -214,7 +214,7 @@ class Map_Seg_Server:
     def __init__(self,model_name = "model2.pth", root_path = None,
              device = None, data_transforms = None, 
              output_pub_name = "/model_output", vis_pub_name = "/model_output_vis",
-             sub_name = "/model_input", service_name = "/Map_Seg_service"):
+             sub_name = "/map16bit", service_name = "/Map_Seg_service"):
         self.model_name = model_name
         rospack = rospkg.RosPack()
         if root_path is None:
@@ -259,8 +259,26 @@ class Map_Seg_Server:
         grid.info = info or MapMetaData()
         grid.info.height = arr.shape[0]
         grid.info.width = arr.shape[1]
-
+        grid.info.resolution = 0.01
+        grid.header = Header()
+        grid.header.frame_id = "map"
+        grid.header.seq = 1
+        grid.header.stamp = rospy.Time.now()
         return grid
+    def scale_image(self, image : np.ndarray):
+        # grab the image dimensions
+        h = image.shape[0]
+        w = image.shape[1]
+        new_image: np.ndarray = np.zeros((int(image.shape[0]/2),int(image.shape[1]/2)),image.dtype)
+        # loop over the image, pixel by pixel
+        for y in range(0, h,2):
+            for x in range(0, w,2):
+                # threshold the pixel
+                # new_image[int(y/2), int(x/2)] = image[y, x,0]
+                new_image[int(y/2), int(x/2)] = image[y, x]
+                
+        # return the thresholded image
+        return new_image
 
     def load_model(self,model_name = None, root_path = None, device = None, criterion = None):
         if root_path is not None:
@@ -283,9 +301,11 @@ class Map_Seg_Server:
 
     def run_model(self, msg: Image, model = None):
         bridge = CvBridge()
-        original_image = bridge.imgmsg_to_cv2(msg, -1)
-        input_image = scale_image(original_image)
-        input = torch.from_numpy(input_image.astype(np.float))
+        original_image = bridge.imgmsg_to_cv2(msg, msg.encoding)
+        print("recieved input size: ",original_image.shape)
+        input_image = self.scale_image(original_image)
+        print("scaled image size: ",input_image.shape)
+        input = torch.from_numpy(input_image.astype(np.float32))
         input = input.view(1,input.shape[0],input.shape[1])
         input = self.data_transforms(input)
         input = input.view(1,input.shape[0],input.shape[1],input.shape[2])
@@ -305,19 +325,29 @@ class Map_Seg_Server:
             self.model = model
         self.model.eval()
         # Forward pass
-        model(input)
+        # model(input)
         with torch.no_grad():
-            model_output: Tensor = model(input)
+            model_output: Tensor = self.model(input)
             # loss = criterion(model_output, output)
         #     model_output = torch.sigmoid(model_output)
         # print("loss is: "+str(loss.item()))
         # model_output
-        output_thresholded = np.round(model_output.numpy()[0,0])
+        # print("output shape and type", model_output.shape, model_output.dtype)
+        output_thresholded: np.ndarray = np.round(model_output.numpy()[0,0],0)
+        # print("thresholded output shape and type", output_thresholded.shape, output_thresholded.dtype)
+
         return output_thresholded
 
     def Map_Seg_cb(self, msg: Image):
-        self.output = self.run_model(msg)        
-        self.vis_msg = self.numpy_to_occupancy_grid(self.output)
+        self.output: np.ndarray =  self.run_model(msg)
+        self.output_vis: np.ndarray =  (50* self.output).astype("int8")
+        print("output shape: ", self.output.shape, "data type: ", self.output.dtype)  
+        print("output_vis[15:25,15:25]: ")  
+        print(self.output_vis[15:25,15:25])  
+        # self.output_vis = cv2.rotate(self.output_vis,rotateCode = cv2.ROTATE_90_COUNTERCLOCKWISE)
+        self.output_vis = self.output_vis.T
+        self.vis_msg = self.numpy_to_occupancy_grid(self.output_vis)
         self.vis_pub.publish(self.vis_msg)
+        print("model output visulized published")
         # self.output_msg = self.output_to_msg(self.output)
         # self.output_pub.publish(self.output_msg)
