@@ -265,9 +265,9 @@ PathCostHeuristic::updateMap(depthmap2d::DepthMap2DPtr map)
   // ! Debugging getting Output 
   // ! instead of calculating the output using the neural network,
   // ! we are reading it right away for Debugging purposes 
-  cv::Mat output = imread("/home/mike/thesis_ws/src/depthmap_humanoid_msgs/map_test/output/test2.png",-1);
+  cv::Mat output = imread("/home/mike/thesis_ws/src/Mike-depth-footstep-planner/depthmap_humanoid_msgs/map_test/output/test2.png",-1);
   // cv::rotate(output,output,cv::ROTATE_90_CLOCKWISE);
-  cv::Mat input = imread("/home/mike/thesis_ws/src/depthmap_humanoid_msgs/map_test/input/test2.png",-1);
+  cv::Mat input = imread("/home/mike/thesis_ws/src/Mike-depth-footstep-planner/depthmap_humanoid_msgs/map_test/input/test2.png",-1);
 
   ROS_ERROR("loaded output size: %dx%d",output.rows,output.cols);
 
@@ -322,8 +322,98 @@ PathCostHeuristic::updateMap(depthmap2d::DepthMap2DPtr map)
   // ! Debugging Printing purposes
   cv::resize(ivMapPtr->depthMap()/4.0,input,cv::Size(width,height));
   cv::imshow("input",input);
-  cv::imshow("output", output);
-  cv::waitKey(2000);
+  cv::imshow("Original Output", output);
+  cv::waitKey(3000);
+  cv::destroyAllWindows();
+
+}
+
+void PathCostHeuristic::updateModelOutput(const sensor_msgs::Image::ConstPtr& model_output)
+{
+  // ivModelOutputPtr.reset();
+  // ivModelOutputPtr = model_output;
+
+  cv_bridge::CvImagePtr cv_ptr;
+  try
+  {
+    cv_ptr = cv_bridge::toCvCopy(model_output, model_output->encoding);
+  }
+  catch (cv_bridge::Exception& e)
+  {
+    ROS_ERROR("cv_bridge exception: %s", e.what());
+    return;
+  }
+  if (ivpGrid) // reset map before change it's sizes (in other case we will get SEGMENT ERROR)
+    resetGrid();
+
+  ivGoalX = ivGoalY = -1;
+
+  // TESTING GRIDSEARCH
+  unsigned width = model_output->width;
+  unsigned height = model_output->height;
+
+  if (ivGridSearchPtr)
+    ivGridSearchPtr->destroy();
+
+  ivGridSearchPtr.reset(new sbpl_edit::DEPTH2DGridSearch(width, height,
+                                             ivMapPtr->getResolution(), 4.0/65536.0 ) );
+  // // ! Debugging getting Output 
+  // // ! instead of calculating the output using the neural network,
+  // // ! we are reading it right away for Debugging purposes 
+  // // cv::Mat output = imread("/home/mike/thesis_ws/src/Mike-depth-footstep-planner/depthmap_humanoid_msgs/map_test/output/test2.png",-1);
+  // // cv::rotate(output,output,cv::ROTATE_90_CLOCKWISE);
+  // // cv::Mat input = imread("/home/mike/thesis_ws/src/Mike-depth-footstep-planner/depthmap_humanoid_msgs/map_test/input/test2.png",-1);
+
+  // ? Beginning To Fill the Grid Search Array from the Neural Network Output
+  cv::Mat output = cv_ptr->image;
+  ROS_WARN("Got Model OUTPUT size: %dx%d",output.rows,output.cols);
+
+  // ! Debugging output type
+  int type = output.type();
+  std::string r;
+
+  uchar depth = type & CV_MAT_DEPTH_MASK;
+  uchar chans = 1 + (type >> CV_CN_SHIFT);
+
+  switch ( depth ) {
+    case CV_8U:  r = "8U"; break;
+    case CV_8S:  r = "8S"; break;
+    case CV_16U: r = "16U"; break;
+    case CV_16S: r = "16S"; break;
+    case CV_32S: r = "32S"; break;
+    case CV_32F: r = "32F"; break;
+    case CV_64F: r = "64F"; break;
+    default:     r = "User"; break;
+  }
+
+  r += "C";
+  r += (chans+'0');
+  std::cout << "Model output type: " << r <<std::endl;
+
+  // // ! Debugging Initializing Gird array from output for GridSearch
+  // ? Initializing Gird array from Model Output for GridSearch
+  ivpGrid = new unsigned char* [width];
+  for (unsigned x = 0; x < width; ++x){
+    ivpGrid[x] = new unsigned char [height];
+  }
+  for (unsigned y = 0; y < height; ++y)
+  {
+    for (unsigned x = 0; x < width; ++x)
+    {
+      int output_state = static_cast<int>(output.at<unsigned short>(x,y));
+      if (output_state < 0)
+        ROS_ERROR("output_state of Model Output of map at %d %d is: %d out of bounds", x, y,output_state);
+      else if (output_state <= 100)
+        ivpGrid[x][y] = 255;
+      else
+        ivpGrid[x][y] = 0;
+//      ROS_ERROR("output_state of Model Output of map at %d %d dist: %d ivpGrid: %d", x, y,dist,static_cast<int>(ivpGrid[x][y]));
+    }
+  }
+
+  // ! Debugging Printing purposes
+  cv::imshow("Model Output", output);
+  cv::waitKey(3000);
   cv::destroyAllWindows();
 
 }

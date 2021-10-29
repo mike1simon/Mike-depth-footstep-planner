@@ -9,6 +9,7 @@ FootstepPlannerNode::FootstepPlannerNode()
 
   // provide callbacks to interact with the footstep planner:
   ivGridMapSub = nh.subscribe<depthmap_humanoid_msgs::DepthMap>("depthmap", 1, &FootstepPlanner::mapCallback, &ivFootstepPlanner);
+  ivGridModelOutputSub = nh.subscribe<sensor_msgs::Image>("model_output", 1, &FootstepPlanner::modelOutputCallback, &ivFootstepPlanner);
   ivGoalPoseSub = nh.subscribe<geometry_msgs::PoseStamped>("/move_base_simple/goal", 1, &FootstepPlanner::goalPoseCallback, &ivFootstepPlanner);
   ivStartPoseSub = nh.subscribe<geometry_msgs::PoseWithCovarianceStamped>("initialpose", 1, &FootstepPlanner::startPoseCallback, &ivFootstepPlanner);
 

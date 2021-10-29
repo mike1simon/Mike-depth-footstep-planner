@@ -129,6 +129,14 @@ public:
 //  bool updateMap(const gridmap_2d::GridMap2DPtr map);
   bool updateMap(const depthmap2d::DepthMap2DPtr map);
 
+  /**
+   * @brief Updates the model output (Segmentation) of the map in the planning environment.
+   *
+   * @return True if a replanning is necessary, i.e. the old path is not valid
+   * any more.
+   */
+  bool updateModelOutput(const sensor_msgs::Image::ConstPtr& model_output);
+
   void setMarkerNamespace(const std::string& ns)
   {
     ivMarkerNamespace = ns;
@@ -170,6 +178,13 @@ public:
    */
   void mapCallback(const depthmap_humanoid_msgs::DepthMapConstPtr& depth_map);
 
+  /**
+   * @brief Callback to set the model output for the map.
+   *
+   * Subscribed to 'model_output'.
+   */
+  void modelOutputCallback(const sensor_msgs::Image::ConstPtr& model_output);
+  
   /**
    * @brief Clear the footstep path visualization from a previous planning
    * task.
@@ -271,6 +286,7 @@ protected:
   ros::Publisher  ivFootstepPathVisPub;
   ros::Publisher  ivRandomStatesVisPub;
   ros::Subscriber ivGridMapSub;
+  ros::Subscriber ivGridModelOutputSub;
   ros::Publisher  ivHeuristicPathVisPub;
   ros::Publisher  ivPathVisPub;
   ros::Publisher  ivStartPoseVisPub;

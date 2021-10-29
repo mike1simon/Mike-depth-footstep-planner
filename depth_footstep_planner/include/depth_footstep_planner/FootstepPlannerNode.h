@@ -27,6 +27,7 @@ protected:
 
   ros::Subscriber ivGoalPoseSub;
   ros::Subscriber ivGridMapSub;
+  ros::Subscriber ivGridModelOutputSub;
   ros::Subscriber ivStartPoseSub;
   ros::Subscriber ivRobotPoseSub;
 

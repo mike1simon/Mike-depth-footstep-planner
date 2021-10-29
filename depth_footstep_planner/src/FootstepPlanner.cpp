@@ -663,6 +663,18 @@ FootstepPlanner::mapCallback(
 }
 
 
+void FootstepPlanner::modelOutputCallback(const sensor_msgs::Image::ConstPtr& model_output)
+{
+  // new map: update the map information
+  if (updateModelOutput(model_output))
+  {
+    // NOTE: update map currently simply resets the planner, i.e. replanning
+    // here is in fact a planning from the scratch
+    plan(false);
+  }
+}
+
+
 bool
 FootstepPlanner::setGoal(const geometry_msgs::PoseStampedConstPtr goal_pose)
 {
@@ -810,6 +822,17 @@ FootstepPlanner::updateMap(const depthmap2d::DepthMap2DPtr map)
   // ..otherwise the environment's map can simply be updated
   ivPlannerEnvironmentPtr->updateMap(map);
   return false;
+}
+bool FootstepPlanner::updateModelOutput(const sensor_msgs::Image::ConstPtr& model_output)
+{
+  try{
+    ivPlannerEnvironmentPtr->updateModelOutput(model_output);
+    return true;
+  }
+  catch(Exception e){
+    ROS_ERROR("ERROR UPDATING 2DSEARCHGRID from MODEL OUTPUT");
+    return false;
+  }
 }
 
 

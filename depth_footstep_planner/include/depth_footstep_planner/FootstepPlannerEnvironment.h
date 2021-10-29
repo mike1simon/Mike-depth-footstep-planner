@@ -126,6 +126,7 @@ public:
 
   //  void updateMap(gridmap_2d::GridMap2DPtr map);
   void updateMap(depthmap2d::DepthMap2DPtr map);
+  void updateModelOutput(const sensor_msgs::Image::ConstPtr& model_output);
 
   /**
    * @return True iff the foot in State s is colliding with an
@@ -444,7 +445,8 @@ protected:
   /// Pointer to the map.
   //  boost::shared_ptr<gridmap_2d::GridMap2D> ivMapPtr;
   boost::shared_ptr<depthmap2d::DepthMap2D> ivMapPtr;
-
+  // boost::shared_ptr<sensor_msgs::Image> ivModelOutputPtr;
+  
   exp_states_2d_t ivExpandedStates;
   exp_states_t ivRandomStates;  ///< random intermediate states for R*
   size_t ivNumExpandedStates;

@@ -57,6 +57,8 @@ public:
   bool calculateDistances(const PlanningState& from, const PlanningState& to);
 
   void updateMap(depthmap2d::DepthMap2DPtr map);
+  void updateModelOutput(const sensor_msgs::Image::ConstPtr& model_output);
+
   inline double getDiffDepthCost(){return ivDiffDepthCost;}
 
 private:
@@ -76,6 +78,7 @@ private:
   int ivGoalY;
 
   depthmap2d::DepthMap2DPtr ivMapPtr;
+  // sensor_msgs::Image::ConstPtr ivModelOutputPtr;
 //  boost::shared_ptr<DEPTH2DGridSearch> ivGridSearchPtr;
   boost::shared_ptr<sbpl_edit::DEPTH2DGridSearch> ivGridSearchPtr;
 //  sbpl_edit::DEPTH2DGridSearch ivGridSearchPtr;

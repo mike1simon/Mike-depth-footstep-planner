@@ -1,0 +1,23 @@
+{
+    "configurations": [
+        {
+            "name": "Linux",
+            "includePath": [
+                "${workspaceFolder}/**",
+                "/home/mike/thesis_ws/devel/include/**",
+                "~/qt_ws/devel/include/**",
+                "/opt/ros/noetic/include/**",
+                "/opt/ros/noetic/include/cv_bridge/**",
+                "~/thesis_ws/src/Mike-depth-footstep-planner/depth_footstep_planner/**",
+                "~/thesis_ws/src/Mike-depth-footstep-planner/depth_footstep_planner/include/**",
+                "/usr/include/opencv4"
+            ],
+            "defines": [],
+            "compilerPath": "/usr/bin/gcc",
+            "cStandard": "gnu17",
+            "cppStandard": "gnu++14",
+            "intelliSenseMode": "linux-gcc-x64"
+        }
+    ],
+    "version": 4
+}

@@ -28,7 +28,7 @@ allocated_time: 15.0
 
 initial_epsilon: 8.0
 
-forward_search: True
+forward_search: False
 
 # the limit of changed states that decides whether to replan or to start a hole
 # new planning task

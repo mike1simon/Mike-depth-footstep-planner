@@ -27,6 +27,8 @@ from cv_bridge import CvBridge
 import sensor_msgs
 from sensor_msgs.msg import Image
 from std_msgs.msg import Header
+from cv_bridge import CvBridge
+
 # from typing import List # for specifing List type and autocomplete for it
 
 # def scale_image(image : np.ndarray):
@@ -265,6 +267,13 @@ class Map_Seg_Server:
         grid.header.seq = 1
         grid.header.stamp = rospy.Time.now()
         return grid
+
+    def output_to_msg(self, output: np.ndarray):
+        output: np.ndarray = 255* output.astype("uint8")
+        bridge = CvBridge()
+        output_msg = bridge.cv2_to_imgmsg(output, encoding="8UC1")
+        return output_msg
+
     def scale_image(self, image : np.ndarray):
         # grab the image dimensions
         h = image.shape[0]
@@ -341,13 +350,14 @@ class Map_Seg_Server:
     def Map_Seg_cb(self, msg: Image):
         self.output: np.ndarray =  self.run_model(msg)
         self.output_vis: np.ndarray =  (50* self.output).astype("int8")
-        print("output shape: ", self.output.shape, "data type: ", self.output.dtype)  
-        print("output_vis[15:25,15:25]: ")  
-        print(self.output_vis[15:25,15:25])  
+        # print("output shape: ", self.output.shape, "data type: ", self.output.dtype)  
+        # print("output_vis[15:25,15:25]: ")  
+        # print(self.output_vis[15:25,15:25])  
         # self.output_vis = cv2.rotate(self.output_vis,rotateCode = cv2.ROTATE_90_COUNTERCLOCKWISE)
         self.output_vis = self.output_vis.T
         self.vis_msg = self.numpy_to_occupancy_grid(self.output_vis)
         self.vis_pub.publish(self.vis_msg)
         print("model output visulized published")
-        # self.output_msg = self.output_to_msg(self.output)
-        # self.output_pub.publish(self.output_msg)
+        self.output_msg = self.output_to_msg(self.output)
+        self.output_pub.publish(self.output_msg)
+        print("model output published")

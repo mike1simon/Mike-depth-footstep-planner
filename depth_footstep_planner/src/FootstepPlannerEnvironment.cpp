@@ -344,6 +344,19 @@ FootstepPlannerEnvironment::updateMap(depthmap2d::DepthMap2DPtr map)
     ivHeuristicExpired = true;
   }
 }
+void FootstepPlannerEnvironment::updateModelOutput(const sensor_msgs::Image::ConstPtr& model_output)
+{
+  // ivModelOutputPtr.reset();
+  // ivModelOutputPtr = model_output;
+  if (ivHeuristicConstPtr->getHeuristicType() == Heuristic::PATH_COST)
+  {
+    boost::shared_ptr<PathCostHeuristic> h =
+        boost::dynamic_pointer_cast<PathCostHeuristic>(
+            ivHeuristicConstPtr);
+    h->updateModelOutput(model_output);
+    ivHeuristicExpired = true;
+  }
+}
 
 
 void
