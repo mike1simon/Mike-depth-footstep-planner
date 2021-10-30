@@ -314,7 +314,7 @@ FootstepPlannerEnvironment::occupied(PlanningState& s)
   // !! Debugging change the condition to a more suitable location
   if(X < 0 || X >= ivMapPtr->depthMap().rows || Y < 0 || Y >= ivMapPtr->depthMap().cols){
   // !! Debugging See Exactly why this problem happenning repeatedly
-    ROS_ERROR(" Foot is outside the map :( ");
+    // ROS_ERROR(" Foot is outside the map :( ");
     return false;
   }
   // std::cout<<"Matrecies: depth: ["<<ivMapPtr->depthMap().rows<<"x"<<ivMapPtr->depthMap().cols;
@@ -399,7 +399,16 @@ void FootstepPlannerEnvironment::updateModelOutput(const sensor_msgs::Image::Con
   }
 }
 
-
+sensor_msgs::Image FootstepPlannerEnvironment::getDepth2DGridSearchMsg(){
+  if (ivHeuristicConstPtr->getHeuristicType() == Heuristic::PATH_COST)
+  {
+    boost::shared_ptr<PathCostHeuristic> h =
+        boost::dynamic_pointer_cast<PathCostHeuristic>(
+            ivHeuristicConstPtr);
+    return h->getDepth2DGridSearchMsg();
+  }
+  return ivHeuristicConstPtr->getDepth2DGridSearchMsg();
+};
 void
 FootstepPlannerEnvironment::updateHeuristicValues()
 {

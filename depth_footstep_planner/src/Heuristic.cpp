@@ -8,6 +8,10 @@ Heuristic::Heuristic(double cell_size, int num_angle_bins,
   ivNumAngleBins(num_angle_bins),
   ivHeuristicType(type)
 {}
+sensor_msgs::Image Heuristic::getDepth2DGridSearchMsg(){
+  sensor_msgs::Image fake_output;
+  return fake_output;
+}
 
 
 Heuristic::~Heuristic()
@@ -21,7 +25,6 @@ EuclideanHeuristic::EuclideanHeuristic(double cell_size, int num_angle_bins)
 
 EuclideanHeuristic::~EuclideanHeuristic()
 {}
-
 
 double
 EuclideanHeuristic::getHValue(const PlanningState& from,

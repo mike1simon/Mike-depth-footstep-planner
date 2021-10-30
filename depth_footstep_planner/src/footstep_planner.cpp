@@ -12,7 +12,7 @@
 //using namespace sbpl_edit;
 int main(int argc, char **argv)
 {
-  ros::init(argc, argv, "depth_footstep_planner");
+  ros::init(argc, argv, "depth_footstep_planner_node");
 //  sbpl_edit::SBPL2DGridSearch s(10,10,0.1f);
 //  ros::NodeHandle nh;
 //  ros::Subscriber s = nh.subscribe<depthmap_humanoid_msgs::DepthMap>("/depthmap",1,&callback);
@@ -21,6 +21,6 @@ int main(int argc, char **argv)
 
 //  sbpl::SBPL2DGridSearch s;
 
-  ROS_INFO("Hello world!");
+  ROS_INFO("Depth Footstep Planner Node Started");
   ros::spin();
 }

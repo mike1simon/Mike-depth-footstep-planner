@@ -194,9 +194,10 @@ PathCostHeuristic::calculateDistances(const PlanningState& from,
     //                         from_x/2, from_y/2, ivGoalX/2, ivGoalY/2,
     //                         max_hight, sbpl_edit::SBPL_2DGRIDSEARCH_TERM_CONDITION_ALLCELLS);
   }
+
   // ! Debugging time
   double d = (ros::Time::now() - start).toSec();
-  ROS_ERROR("DEPTH2DGRIDSEARCH took: %lf seconds",d);
+  ROS_INFO("Depth2DGridSearch Done in: %3.4lf seconds",d);
   // ! Debugging TEST GRID2DSEARCH
   int width = static_cast<int>(ivMapPtr->getInfo().width/2);
   int height = static_cast<int>(ivMapPtr->getInfo().height/2);
@@ -221,8 +222,8 @@ PathCostHeuristic::calculateDistances(const PlanningState& from,
         max_cost = dist;
     }
   }
-  ROS_ERROR("maximum = %lf  minimum = %lf max_cost = %lf  max = %d ",maximum,minimum,max_cost,ivGridSearchPtr->getlargestcomputedoptimalf_inmm());
-
+  // ROS_ERROR("maximum = %lf  minimum = %lf max_cost = %lf  max = %d ",maximum,minimum,max_cost,ivGridSearchPtr->getlargestcomputedoptimalf_inmm());
+  cv::Mat DEPTH2DGRIDSEARCH_image = cv::Mat::zeros(width,height,CV_8UC1);
   for (int i=0;i<width;i++) {
     for(int j=0;j<height;j++){
       if(distances.at<float>(i,j) < 0){
@@ -230,15 +231,26 @@ PathCostHeuristic::calculateDistances(const PlanningState& from,
       }
       else
         distances.at<float>(i,j) = distances.at<float>(i,j)/(max_cost);
+      DEPTH2DGRIDSEARCH_image.at<u_int8_t>(i,j) = static_cast<u_int8_t>(255 * distances.at<float>(i,j));
     }
   }
+  cv_bridge::CvImage CV_Bridge;
+  CV_Bridge.image = DEPTH2DGRIDSEARCH_image;
+  CV_Bridge.encoding = sensor_msgs::image_encodings::TYPE_8UC1;
+  CV_Bridge.header.frame_id = "world";
+  CV_Bridge.header.stamp = ros::Time::now();
+  ivDepth2DGridSearchMsg = *CV_Bridge.toImageMsg();
 
-  cv::imshow("2DGRIDSEARCH", distances);
-  cv::imwrite("/home/mike/thesis_ws/2DGRIDSEARCH.jpg",distances);
-  cv::waitKey(3000);
-  cv::destroyAllWindows();
+  // cv::imshow("2DGRIDSEARCH", DEPTH2DGRIDSEARCH_image);
+  // cv::imwrite("/home/mike/thesis_ws/2DGRIDSEARCH.jpg",DEPTH2DGRIDSEARCH_image);
+  // cv::waitKey(3000);
+  // cv::destroyAllWindows();
   // ! Finished Debugging Code
   return true;
+}
+
+sensor_msgs::Image PathCostHeuristic::getDepth2DGridSearchMsg(){
+  return ivDepth2DGridSearchMsg;
 }
 
 
@@ -264,68 +276,70 @@ PathCostHeuristic::updateMap(depthmap2d::DepthMap2DPtr map)
   ivGridSearchPtr.reset(new sbpl_edit::DEPTH2DGridSearch(width, height,
                                              ivMapPtr->getResolution(), 4.0/65536.0 ) );
   // ! Debugging getting Output 
-  // ! instead of calculating the output using the neural network,
-  // ! we are reading it right away for Debugging purposes 
-  cv::Mat output = imread("/home/mike/thesis_ws/src/Mike-depth-footstep-planner/depthmap_humanoid_msgs/map_test/output/test2.png",-1);
-  // cv::rotate(output,output,cv::ROTATE_90_CLOCKWISE);
-  cv::Mat input = imread("/home/mike/thesis_ws/src/Mike-depth-footstep-planner/depthmap_humanoid_msgs/map_test/input/test2.png",-1);
+  // // ! instead of calculating the output using the neural network,
+  // // ! we are reading it right away for Debugging purposes 
+  // cv::Mat output = imread("/home/mike/thesis_ws/src/Mike-depth-footstep-planner/depthmap_humanoid_msgs/map_test/output/test2.png",-1);
+  // // cv::rotate(output,output,cv::ROTATE_90_CLOCKWISE);
+  // cv::Mat input = imread("/home/mike/thesis_ws/src/Mike-depth-footstep-planner/depthmap_humanoid_msgs/map_test/input/test2.png",-1);
 
-  ROS_ERROR("loaded output size: %dx%d",output.rows,output.cols);
+  // ROS_INFO("Depth Footstep Planning Node Loaded Fake Map Segmentation Output.");
 
-  // ! Debugging output type
-  int type = output.type();
-  std::string r;
+  // // ! Debugging output type
+  // int type = output.type();
+  // std::string r;
 
-  uchar depth = type & CV_MAT_DEPTH_MASK;
-  uchar chans = 1 + (type >> CV_CN_SHIFT);
+  // uchar depth = type & CV_MAT_DEPTH_MASK;
+  // uchar chans = 1 + (type >> CV_CN_SHIFT);
 
-  switch ( depth ) {
-    case CV_8U:  r = "8U"; break;
-    case CV_8S:  r = "8S"; break;
-    case CV_16U: r = "16U"; break;
-    case CV_16S: r = "16S"; break;
-    case CV_32S: r = "32S"; break;
-    case CV_32F: r = "32F"; break;
-    case CV_64F: r = "64F"; break;
-    default:     r = "User"; break;
-  }
+  // switch ( depth ) {
+  //   case CV_8U:  r = "8U"; break;
+  //   case CV_8S:  r = "8S"; break;
+  //   case CV_16U: r = "16U"; break;
+  //   case CV_16S: r = "16S"; break;
+  //   case CV_32S: r = "32S"; break;
+  //   case CV_32F: r = "32F"; break;
+  //   case CV_64F: r = "64F"; break;
+  //   default:     r = "User"; break;
+  // }
 
-  r += "C";
-  r += (chans+'0');
-  std::cout << "output type: " << r <<std::endl;
+  // r += "C";
+  // r += (chans+'0');
+  // std::cout << "output type: " << r <<std::endl;
 
   // ! Debugging Initializing Gird array from output for GridSearch
-  ivpGrid = new unsigned char* [width];
+  // ivpGrid = new unsigned char* [width];
   ivpDepth2D = new float* [width];
 
   for (unsigned x = 0; x < width; ++x){
-    ivpGrid[x] = new unsigned char [height];
+    // ! Debugging remove comments of Updating Grid Here instead of in the updateModelOutput
+    // ivpGrid[x] = new unsigned char [height];
     ivpDepth2D[x] = new float [height];
   }
   for (unsigned y = 0; y < height; ++y)
   {
     for (unsigned x = 0; x < width; ++x)
     {
-//      float dist = 0;//ivMapPtr->distanceMapAtCell(x,y);
-      // int dist = static_cast<int>(output.at<Vec3b>(x,y).val[0]);
-      int dist = static_cast<int>(output.at<unsigned short>(x,y));
-      if (dist < 0)
-        ROS_ERROR("Distance map at %d %d dist: %f out of bounds", x, y,dist);
-      else if (dist <= 100)
-        ivpGrid[x][y] = 255;
-      else
-        ivpGrid[x][y] = 0;
-//      ROS_ERROR("output map at %d %d dist: %d ivpGrid: %d", x, y,dist,static_cast<int>(ivpGrid[x][y]));
+    // ! Debugging remove comments of Updating Grid Here instead of in the updateModelOutput
+// //      float dist = 0;//ivMapPtr->distanceMapAtCell(x,y);
+//       // int dist = static_cast<int>(output.at<Vec3b>(x,y).val[0]);
+//       int dist = static_cast<int>(output.at<unsigned short>(x,y));
+//       if (dist < 0)
+//         ROS_ERROR("Distance map at %d %d dist: %f out of bounds", x, y,dist);
+//       else if (dist <= 100)
+//         ivpGrid[x][y] = 255;
+//       else
+//         ivpGrid[x][y] = 0;
+// //      ROS_ERROR("output map at %d %d dist: %d ivpGrid: %d", x, y,dist,static_cast<int>(ivpGrid[x][y]));
       ivpDepth2D[x][y] = ivMapPtr->depthMapAtCell(x*2,y*2);
     }
   }
 
   // ! Debugging Printing purposes
-  cv::resize(ivMapPtr->depthMap()/4.0,input,cv::Size(width,height));
-  cv::imshow("input",input);
-  cv::imshow("Original Output", output);
-  cv::waitKey(3000);
-  cv::destroyAllWindows();
+  // cv::resize(ivMapPtr->depthMap()/4.0,input,cv::Size(width,height));
+  // cv::imshow("input",input);
+  // cv::imshow("Original Output", output);
+  // cv::waitKey(3000);
+  // cv::destroyAllWindows();
 
 }
 
@@ -367,29 +381,29 @@ void PathCostHeuristic::updateModelOutput(const sensor_msgs::Image::ConstPtr& mo
 
   // ? Beginning To Fill the Grid Search Array from the Neural Network Output
   cv::Mat output = cv_ptr->image;
-  ROS_WARN("Got Model OUTPUT size: %dx%d",output.rows,output.cols);
+  ROS_INFO("Depth Footstep Planning Node Got Feasible Footsteps For the Map (Model Output). \n");
 
   // ! Debugging output type
-  int type = output.type();
-  std::string r;
+  // int type = output.type();
+  // std::string r;
 
-  uchar depth = type & CV_MAT_DEPTH_MASK;
-  uchar chans = 1 + (type >> CV_CN_SHIFT);
+  // uchar depth = type & CV_MAT_DEPTH_MASK;
+  // uchar chans = 1 + (type >> CV_CN_SHIFT);
 
-  switch ( depth ) {
-    case CV_8U:  r = "8U"; break;
-    case CV_8S:  r = "8S"; break;
-    case CV_16U: r = "16U"; break;
-    case CV_16S: r = "16S"; break;
-    case CV_32S: r = "32S"; break;
-    case CV_32F: r = "32F"; break;
-    case CV_64F: r = "64F"; break;
-    default:     r = "User"; break;
-  }
+  // switch ( depth ) {
+  //   case CV_8U:  r = "8U"; break;
+  //   case CV_8S:  r = "8S"; break;
+  //   case CV_16U: r = "16U"; break;
+  //   case CV_16S: r = "16S"; break;
+  //   case CV_32S: r = "32S"; break;
+  //   case CV_32F: r = "32F"; break;
+  //   case CV_64F: r = "64F"; break;
+  //   default:     r = "User"; break;
+  // }
 
-  r += "C";
-  r += (chans+'0');
-  std::cout << "Model output type: " << r <<std::endl;
+  // r += "C";
+  // r += (chans+'0');
+  // std::cout << "Model output type: " << r <<std::endl;
 
   // // ! Debugging Initializing Gird array from output for GridSearch
   // ? Initializing Gird array from Model Output for GridSearch
@@ -413,9 +427,9 @@ void PathCostHeuristic::updateModelOutput(const sensor_msgs::Image::ConstPtr& mo
   }
 
   // ! Debugging Printing purposes
-  cv::imshow("Model Output", output);
-  cv::waitKey(3000);
-  cv::destroyAllWindows();
+  // cv::imshow("Model Output", output);
+  // cv::waitKey(3000);
+  // cv::destroyAllWindows();
 
 }
 

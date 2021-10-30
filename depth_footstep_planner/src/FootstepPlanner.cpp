@@ -25,12 +25,14 @@ FootstepPlanner::FootstepPlanner()
   // ..publishers
   ivExpandedStatesVisPub = nh_private.advertise<
       sensor_msgs::PointCloud>("expanded_states", 1);
+  ivExpandedStatesVisPub = nh_private.advertise<
+      sensor_msgs::PointCloud>("expanded_states", 1);
   ivRandomStatesVisPub = nh_private.advertise<
       sensor_msgs::PointCloud>("random_states", 1);
   ivFootstepPathVisPub = nh_private.advertise<
       visualization_msgs::MarkerArray>("footsteps_array", 1);
-  ivHeuristicPathVisPub = nh_private.advertise<
-      nav_msgs::Path>("heuristic_path", 1);
+  ivDepth2DGridSearchPub = nh_private.advertise<
+      sensor_msgs::Image>("Depth_2DGridSearch", 10, true);
   ivPathVisPub = nh_private.advertise<nav_msgs::Path>("path", 1);
   ivStartPoseVisPub = nh_private.advertise<
       geometry_msgs::PoseStamped>("start", 1);
@@ -342,6 +344,9 @@ FootstepPlanner::run()
            ivMaxSearchTime, ivInitialEpsilon,
            ivPlannerPtr->get_initial_eps());
   int path_cost;
+
+  // ? Publish 2DGridSearch Image
+  ivDepth2DGridSearchPub.publish(ivPlannerEnvironmentPtr->getDepth2DGridSearchMsg());
   ros::WallTime startTime = ros::WallTime::now();
   try
   {
@@ -666,12 +671,13 @@ FootstepPlanner::mapCallback(
 void FootstepPlanner::modelOutputCallback(const sensor_msgs::Image::ConstPtr& model_output)
 {
   // new map: update the map information
-  if (updateModelOutput(model_output))
-  {
-    // NOTE: update map currently simply resets the planner, i.e. replanning
-    // here is in fact a planning from the scratch
-    plan(false);
-  }
+  updateModelOutput(model_output);
+  // if (updateModelOutput(model_output))
+  // {
+  //   // NOTE: update map currently simply resets the planner, i.e. replanning
+  //   // here is in fact a planning from the scratch
+  //   plan(false);
+  // }
 }
 
 
@@ -831,7 +837,7 @@ bool FootstepPlanner::updateModelOutput(const sensor_msgs::Image::ConstPtr& mode
     return true;
   }
   catch(Exception e){
-    ROS_ERROR("ERROR UPDATING 2DSEARCHGRID from MODEL OUTPUT");
+    ROS_ERROR("ERROR UPDATING Feasible Footsteps Segmentation Map from MODEL OUTPUT");
     return false;
   }
 }

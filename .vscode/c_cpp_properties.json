@@ -10,6 +10,7 @@
                 "/opt/ros/noetic/include/cv_bridge/**",
                 "~/thesis_ws/src/Mike-depth-footstep-planner/depth_footstep_planner/**",
                 "~/thesis_ws/src/Mike-depth-footstep-planner/depth_footstep_planner/include/**",
+                "~/thesis_ws/src/Mike-depth-footstep-planner/depthmap_humanoid_msgs/include/**",
                 "/usr/include/opencv4"
             ],
             "defines": [],

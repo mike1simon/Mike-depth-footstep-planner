@@ -58,7 +58,7 @@ public:
 
   void updateMap(depthmap2d::DepthMap2DPtr map);
   void updateModelOutput(const sensor_msgs::Image::ConstPtr& model_output);
-
+  sensor_msgs::Image getDepth2DGridSearchMsg();
   inline double getDiffDepthCost(){return ivDiffDepthCost;}
 
 private:
@@ -81,6 +81,7 @@ private:
   // sensor_msgs::Image::ConstPtr ivModelOutputPtr;
 //  boost::shared_ptr<DEPTH2DGridSearch> ivGridSearchPtr;
   boost::shared_ptr<sbpl_edit::DEPTH2DGridSearch> ivGridSearchPtr;
+  sensor_msgs::Image ivDepth2DGridSearchMsg;
 //  sbpl_edit::DEPTH2DGridSearch ivGridSearchPtr;
   void resetGrid();
 };

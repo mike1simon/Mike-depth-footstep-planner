@@ -1,51 +1,24 @@
 #!/usr/bin/env python3
 
-
 import os
 import numpy as np
-import cv2
 from numpy.core.defchararray import mod
-from torch._C import TensorType
-from torch.functional import Tensor
 import rospy
 
-import time 
-import torchvision
 import torch
 import torch.nn as nn
 import torch.nn.functional as F
-from torch.utils import data
-from torch.utils.data import Dataset, DataLoader
+from torch.functional import Tensor
+
 import torchvision.transforms as transforms
-from torch.utils.data.sampler import SubsetRandomSampler
-from torch import optim
 import rospkg
-import matplotlib.pyplot as plt
-from depthmap_humanoid_msgs.msg import GreyScaleMap16bit
 from nav_msgs.msg import OccupancyGrid, MapMetaData
 from cv_bridge import CvBridge
-import sensor_msgs
 from sensor_msgs.msg import Image
 from std_msgs.msg import Header
 from cv_bridge import CvBridge
 
 # from typing import List # for specifing List type and autocomplete for it
-
-# def scale_image(image : np.ndarray):
-#     # grab the image dimensions
-#     h = image.shape[0]
-#     w = image.shape[1]
-#     new_image: np.ndarray = np.zeros((int(image.shape[0]/2),int(image.shape[1]/2)),image.dtype)
-#     # loop over the image, pixel by pixel
-#     for y in range(0, h,2):
-#         for x in range(0, w,2):
-#             # threshold the pixel
-#             new_image[int(y/2), int(x/2)] = image[y, x,0]
-            
-#     # return the thresholded image
-#     return new_image
-
-        
 class conv_block(nn.Module):
     def __init__(self, in_c, out_c,kernal1=3,kernal2=3):
         super().__init__()
@@ -134,84 +107,9 @@ class Custom_UNET_Model(nn.Module):
 
         return outputs
 
-
-
 # data_transforms = transforms.Compose([
 #         transforms.Normalize((65534.0/2.0), (65534.0/2.0))
 #         ])
-
-# def numpy_to_occupancy_grid(arr, info=None):
-#         if not len(arr.shape) == 2:
-#                 raise TypeError('Array must be 2D')
-#         if not arr.dtype == np.int8:
-#                 raise TypeError('Array must be of int8s')
-
-#         grid = OccupancyGrid()
-#         if isinstance(arr, np.ma.MaskedArray):
-#                 # We assume that the masked value are already -1, for speed
-#                 arr = arr.data
-#         grid.data = arr.ravel()
-#         grid.info = info or MapMetaData()
-#         grid.info.height = arr.shape[0]
-#         grid.info.width = arr.shape[1]
-
-#         return grid
-
-
-
-# def loadModel(model_name = "model.pth", root_path = None, model_output_path = None):
-#     global criterion, device, model
-#     rospack = rospkg.RosPack()
-#     if root_path is None:
-#         root_path = os.path.join(rospack.get_path('depth_footstep_planner') , "model")
-#     model_output_path = os.path.join(root_path,"model_output")
-#     model_original_path = os.path.join(root_path,"original")
-#     model_input_path = os.path.join(root_path,"input")
-#     original_output_path = os.path.join(root_path,"output")
-#     model_path = os.path.join(root_path,"models",model_name)
-    
-#     device = torch.device('cuda' if torch.cuda.is_available() else 'cpu')
-#     model = Custom_UNET_Model().to(device)
-#     criterion = nn.BCELoss()
-#     model.load_state_dict(torch.load(model_path))
-
-#     return model
-
-# def run_model(msg: Image, model: Custom_UNET_Model, pub=None):
-#     bridge = CvBridge()
-#     original_image = bridge.imgmsg_to_cv2(msg, -1)
-#     input_image = scale_image(original_image)
-#     input = torch.from_numpy(input_image.astype(np.float))
-#     input = input.view(1,input.shape[0],input.shape[1])
-#     input = data_transforms(input)
-#     input = input.view(1,input.shape[0],input.shape[1],input.shape[2])
-#     print("input shape and type", input.shape, input.dtype)
-    
-#     # output = torch.from_numpy(output_image.astype(np.float32))
-#     # output = output.view(1,output.shape[0],output.shape[1])
-
-#     # output = torch.div(torch.add(data_transforms(output),1),2)
-#     # output = output.view(1,output.shape[0],output.shape[1],output.shape[2])
-#     # print(output.shape,output.dtype)
-
-#     input = input.to(device)
-#     # output = output.to(device)
-#     model.eval()
-#     # Forward pass
-#     model(input)
-#     with torch.no_grad():
-#         model_output: Tensor = model(input)
-#         # loss = criterion(model_output, output)
-#     #     model_output = torch.sigmoid(model_output)
-#     # print("loss is: "+str(loss.item()))
-#     # model_output
-#     output_thresholded = np.round(model_output.numpy()[0,0])
-#     output_msg = numpy_to_occupancy_grid(output_thresholded)
-#     if pub is None:
-#         pub = rospy.Publisher("/model_output_vis")
-#     pub.publish(output_msg)
-#     return
-
 class Map_Seg_Server:
     def __init__(self,model_name = "model2.pth", root_path = None,
              device = None, data_transforms = None, 
@@ -302,7 +200,7 @@ class Map_Seg_Server:
         self.model = Custom_UNET_Model().to(self.device)
         if criterion is not None:
             self.criterion = criterion
-        print("loaded model from: ", self.model_path)
+        rospy.loginfo("Feasible Footsteps Segmentation Node Loaded UNET Model from: %s", self.model_path)
         self.model.load_state_dict(torch.load(self.model_path))
         # self.model.load_state_dict(self.model_path)
         return self.model
@@ -311,22 +209,12 @@ class Map_Seg_Server:
     def run_model(self, msg: Image, model = None):
         bridge = CvBridge()
         original_image = bridge.imgmsg_to_cv2(msg, msg.encoding)
-        print("recieved input size: ",original_image.shape)
+        # print("recieved input size: ",original_image.shape)
         input_image = self.scale_image(original_image)
-        print("scaled image size: ",input_image.shape)
         input = torch.from_numpy(input_image.astype(np.float32))
         input = input.view(1,input.shape[0],input.shape[1])
         input = self.data_transforms(input)
         input = input.view(1,input.shape[0],input.shape[1],input.shape[2])
-        print("input shape and type", input.shape, input.dtype)
-        
-        # output = torch.from_numpy(output_image.astype(np.float32))
-        # output = output.view(1,output.shape[0],output.shape[1])
-
-        # output = torch.div(torch.add(data_transforms(output),1),2)
-        # output = output.view(1,output.shape[0],output.shape[1],output.shape[2])
-        # print(output.shape,output.dtype)
-
         input = input.to(self.device)
         # output = output.to(device)
 
@@ -334,30 +222,23 @@ class Map_Seg_Server:
             self.model = model
         self.model.eval()
         # Forward pass
-        # model(input)
         with torch.no_grad():
             model_output: Tensor = self.model(input)
-            # loss = criterion(model_output, output)
-        #     model_output = torch.sigmoid(model_output)
-        # print("loss is: "+str(loss.item()))
-        # model_output
-        # print("output shape and type", model_output.shape, model_output.dtype)
         output_thresholded: np.ndarray = np.round(model_output.numpy()[0,0],0)
         # print("thresholded output shape and type", output_thresholded.shape, output_thresholded.dtype)
 
         return output_thresholded
 
     def Map_Seg_cb(self, msg: Image):
+        rospy.loginfo("Feasible Footsteps Segmentation Node Recieved Map (Request).")
         self.output: np.ndarray =  self.run_model(msg)
         self.output_vis: np.ndarray =  (50* self.output).astype("int8")
         # print("output shape: ", self.output.shape, "data type: ", self.output.dtype)  
         # print("output_vis[15:25,15:25]: ")  
         # print(self.output_vis[15:25,15:25])  
-        # self.output_vis = cv2.rotate(self.output_vis,rotateCode = cv2.ROTATE_90_COUNTERCLOCKWISE)
         self.output_vis = self.output_vis.T
         self.vis_msg = self.numpy_to_occupancy_grid(self.output_vis)
         self.vis_pub.publish(self.vis_msg)
-        print("model output visulized published")
         self.output_msg = self.output_to_msg(self.output)
         self.output_pub.publish(self.output_msg)
-        print("model output published")
+        rospy.loginfo("Feasible Footsteps Segmentation Node Publishing Results(Model Outputs).")

@@ -28,6 +28,7 @@ public:
                            const PlanningState& to) const = 0;
 
   HeuristicType getHeuristicType() const { return ivHeuristicType; }
+  sensor_msgs::Image getDepth2DGridSearchMsg();
 
 protected:
   double ivCellSize;

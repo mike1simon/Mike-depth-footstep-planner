@@ -149,7 +149,7 @@ public:
 
   /// @return The number of expanded states during the search.
   int getNumExpandedStates() { return ivNumExpandedStates; }
-
+  sensor_msgs::Image getDepth2DGridSearchMsg();
   exp_states_2d_iter_t getExpandedStatesStart()
   {
     return ivExpandedStates.begin();

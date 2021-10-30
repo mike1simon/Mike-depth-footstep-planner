@@ -287,6 +287,7 @@ protected:
   ros::Publisher  ivRandomStatesVisPub;
   ros::Subscriber ivGridMapSub;
   ros::Subscriber ivGridModelOutputSub;
+  ros::Publisher  ivDepth2DGridSearchPub;
   ros::Publisher  ivHeuristicPathVisPub;
   ros::Publisher  ivPathVisPub;
   ros::Publisher  ivStartPoseVisPub;

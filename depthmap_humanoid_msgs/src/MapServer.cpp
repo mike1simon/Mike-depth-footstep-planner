@@ -259,7 +259,7 @@ depthmap_humanoid_msgs::DepthMap MapServer::turnMaptoDepthMap(cv::Mat IMG, nav_m
   cv_image.header.stamp = ros::Time::now();
   cv_image.encoding = sensor_msgs::image_encodings::TYPE_32FC1;
   output.map = *cv_image.toImageMsg();
-  ROS_ERROR("STEP: %ld , WIDTH: %ld , Hight: %ld",output.map.step,output.map.width,output.map.height);
+  // ROS_ERROR("STEP: %ld , WIDTH: %ld , Hight: %ld",output.map.step,output.map.width,output.map.height);
   return output;
 }
 
