@@ -446,6 +446,7 @@ protected:
   //  boost::shared_ptr<gridmap_2d::GridMap2D> ivMapPtr;
   boost::shared_ptr<depthmap2d::DepthMap2D> ivMapPtr;
   // boost::shared_ptr<sensor_msgs::Image> ivModelOutputPtr;
+  boost::shared_ptr<cv::Mat> ivModelOutputPtr;
   
   exp_states_2d_t ivExpandedStates;
   exp_states_t ivRandomStates;  ///< random intermediate states for R*

@@ -205,7 +205,7 @@ bool pointWithinPolygon(int x, int y,
  */
 bool collision_check(int x, int y, int theta, double& new_depth,
                      int foot_height, int foot_width, int method,
-                     const depthmap2d::DepthMap2D& depth_map);
+                     const depthmap2d::DepthMap2D& depth_map, boost::shared_ptr<cv::Mat> map_step_validity);
 
 /**
  * @brief first method Checks if a footstep (represented by its center and orientation)

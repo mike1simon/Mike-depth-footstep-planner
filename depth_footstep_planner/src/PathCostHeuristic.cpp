@@ -186,6 +186,7 @@ PathCostHeuristic::calculateDistances(const PlanningState& from,
     ivGoalY = to_y;
       // ! Debugging 
     unsigned int max_hight;
+    // ! Change This when changing the accurcy from 1000x1000 to 500x500 and use downsampling also
     ivGridSearchPtr->search(ivpGrid,ivpDepth2D, cvObstacleThreshold,
                             ivGoalX/2, ivGoalY/2, from_x/2, from_y/2,
                             max_hight, sbpl_edit::SBPL_2DGRIDSEARCH_TERM_CONDITION_ALLCELLS);

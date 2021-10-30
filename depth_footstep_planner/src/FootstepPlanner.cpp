@@ -793,7 +793,8 @@ FootstepPlanner::setStart(float x, float y, float theta)
   geometry_msgs::PoseStamped start_pose;
   start_pose.pose.position.x = x;
   start_pose.pose.position.y = y;
-  start_pose.pose.position.z = max(foot_left.getDepth(),foot_right.getDepth()) + 0.025;
+  // start_pose.pose.position.z = max(foot_left.getDepth(),foot_right.getDepth()) + 0.05;
+  start_pose.pose.position.z = 0;
   start_pose.pose.orientation = tf::createQuaternionMsgFromYaw(theta);
   start_pose.header.frame_id = ivMapPtr->getFrameID();
   start_pose.header.stamp = ros::Time::now();

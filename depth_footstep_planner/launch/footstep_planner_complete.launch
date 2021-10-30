@@ -8,5 +8,5 @@
   </node>
   <node name="Footstep_Segmentation_Node" pkg="depth_footstep_planner" type="DepthmapFootstepSegmentationNode.py" output="screen"/>
   
-  <node name="rviz" pkg="rviz" type="rviz" args="-d $(find depth_footstep_planner)/config/footstep_config.rviz" />
+  <node name="rviz" pkg="rviz" type="rviz" args="-d $(find depth_footstep_planner)/config/footstep_config2.rviz" />
 </launch>

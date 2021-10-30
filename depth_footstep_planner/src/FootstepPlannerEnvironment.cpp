@@ -280,12 +280,18 @@ bool
 FootstepPlannerEnvironment::occupied(PlanningState& s)
 {
 //  ivdebug++;
+  // ! Debug cout
+  // std::cout<<"1 start occupied"<<std::endl;
+  // std::cout<<"0 PlanningState [s.getX,s.getY] ["<<s.getX()<<","<<s.getY()<<"]"<<std::endl;
+
   double x = cell_2_state(s.getX(), ivCellSize);
   double y = cell_2_state(s.getY(), ivCellSize);
   // collision check for the planning state
   // will not be implimented
 //  if (ivMapPtr->isOccupiedAt(x,y))
 //    return true;
+  // std::cout<<"0 cell_2_state [x,y] ["<<s.getX()<<","<<s.getY()<<"]"<<std::endl;
+
   double theta = angle_cell_2_state(s.getTheta(), ivNumAngleBins);
   double theta_cos = cos(theta);
   double theta_sin = sin(theta);
@@ -296,15 +302,31 @@ FootstepPlannerEnvironment::occupied(PlanningState& s)
     y += theta_sin*ivOriginFootShiftX + theta_cos*ivOriginFootShiftY;
   else // leg == RLEG
     y += theta_sin*ivOriginFootShiftX - theta_cos*ivOriginFootShiftY;
+  
+  // std::cout<<"0 FootShift [x,y] ["<<x<<","<<y<<"]"<<std::endl;
 
   int X = state_2_cell(x,ivCellSize);
   int Y = state_2_cell(y,ivCellSize);
   // collision check for the foot center
   double new_depth = s.getDepth();
+  boost::shared_ptr<cv::Mat> Model_Output;
+
+  // !! Debugging change the condition to a more suitable location
+  if(X < 0 || X >= ivMapPtr->depthMap().rows || Y < 0 || Y >= ivMapPtr->depthMap().cols){
+  // !! Debugging See Exactly why this problem happenning repeatedly
+    ROS_ERROR(" Foot is outside the map :( ");
+    return false;
+  }
+  // std::cout<<"Matrecies: depth: ["<<ivMapPtr->depthMap().rows<<"x"<<ivMapPtr->depthMap().cols;
+  // std::cout<<"    Feasibleity Step: ["<<ivModelOutputPtr->rows<<"x"<<ivModelOutputPtr->cols<<"]"<<std::endl;
+  // std::cout<<"0 collision_check [X,Y] ["<<X<<","<<Y<<"]"<<std::endl;
+
   bool result = collision_check(X, Y, s.getTheta(),new_depth,
                                 disc_val(ivFootsizeX,ivCellSize), disc_val(ivFootsizeY,ivCellSize),
-                         ivCollisionCheckMethod, *ivMapPtr);
+                         ivCollisionCheckMethod, *ivMapPtr, ivModelOutputPtr);
   s.setDepth(new_depth);
+  // std::cout<<"5 end occupied"<<std::endl;
+
   return result;
 
 }
@@ -346,8 +368,27 @@ FootstepPlannerEnvironment::updateMap(depthmap2d::DepthMap2DPtr map)
 }
 void FootstepPlannerEnvironment::updateModelOutput(const sensor_msgs::Image::ConstPtr& model_output)
 {
-  // ivModelOutputPtr.reset();
-  // ivModelOutputPtr = model_output;
+  cv_bridge::CvImagePtr cv_ptr;
+  try
+  {
+    cv_ptr = cv_bridge::toCvCopy(model_output, model_output->encoding);
+    ivModelOutputPtr.reset();
+    ivModelOutputPtr = boost::make_shared<cv::Mat>(cv_ptr->image);
+    // ROS_ERROR("ivModelOutputPtr in 0,0 is = %d", ivModelOutputPtr->at<uint8_t>(0,0));
+    // for(int j=10;j<30;j++){
+    //   for(int i=0;i<100;i++)
+    //     std::cout<<static_cast<bool>(ivModelOutputPtr->at<uint8_t>(i,j));
+    //   std::cout<<std::endl;
+    // }
+
+  }
+  catch (cv_bridge::Exception& e)
+  {
+    ROS_ERROR("cv_bridge exception: %s", e.what());
+    return;
+  }
+
+  // ! change model_output to cv mat
   if (ivHeuristicConstPtr->getHeuristicType() == Heuristic::PATH_COST)
   {
     boost::shared_ptr<PathCostHeuristic> h =
