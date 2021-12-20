@@ -2,21 +2,19 @@
 
 import os
 import numpy as np
-from numpy.core.defchararray import mod
 import rospy
 
 import torch
 import torch.nn as nn
 import torch.nn.functional as F
 from torch.functional import Tensor
-
 import torchvision.transforms as transforms
+
 import rospkg
 from nav_msgs.msg import OccupancyGrid, MapMetaData
 from cv_bridge import CvBridge
 from sensor_msgs.msg import Image
 from std_msgs.msg import Header
-from cv_bridge import CvBridge
 
 # from typing import List # for specifing List type and autocomplete for it
 class conv_block(nn.Module):

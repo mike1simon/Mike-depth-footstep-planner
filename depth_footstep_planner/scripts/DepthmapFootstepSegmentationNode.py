@@ -10,9 +10,9 @@ if __name__ == "__main__":
         rospy.init_node('depthmap_feasible_footstep_segmentation_node', anonymous=True)
         map_segmenter = Map_Seg_Server()
         
-        print("Depthmap Feasible Footstep Segmentation Node Started!")
+        rospy.loginfo("Depthmap Feasible Footstep Segmentation Node Started!")
         rospy.spin()
-        print("Depthmap Feasible Footstep Segmentation Node Closing Now")
+        rospy.loginfo("Depthmap Feasible Footstep Segmentation Node Closing Now")
     except rospy.ROSInterruptException:
         pass
     except KeyboardInterrupt:
