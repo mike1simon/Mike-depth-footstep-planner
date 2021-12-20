@@ -335,11 +335,12 @@ PathCostHeuristic::updateMap(depthmap2d::DepthMap2DPtr map)
   }
 
   // ! Debugging Printing purposes
-  // cv::resize(ivMapPtr->depthMap()/4.0,input,cv::Size(width,height));
-  // cv::imshow("input",input);
+  cv::Mat input;
+  cv::resize(ivMapPtr->depthMap()/4.0,input,cv::Size(width/4,height/4));
+  cv::imshow("input",input);
   // cv::imshow("Original Output", output);
-  // cv::waitKey(3000);
-  // cv::destroyAllWindows();
+  cv::waitKey(3000);
+  cv::destroyAllWindows();
 
 }
 
@@ -427,9 +428,9 @@ void PathCostHeuristic::updateModelOutput(const sensor_msgs::Image::ConstPtr& mo
   }
 
   // ! Debugging Printing purposes
-  // cv::imshow("Model Output", output);
-  // cv::waitKey(3000);
-  // cv::destroyAllWindows();
+  cv::imshow("Model Output", output);
+  cv::waitKey(3000);
+  cv::destroyAllWindows();
 
 }
 

@@ -156,9 +156,12 @@ cv::Mat MapServer::loadMapFromYamlFile(const std::string& fname, double res, nav
 }
 nav_msgs::OccupancyGrid MapServer::turnMaptoOccupancyGrid(cv::Mat IMG, nav_msgs::MapMetaData info){
   nav_msgs::OccupancyGrid output;
+  
   std::string frame_id;
   nh.param("frame_id", frame_id, std::string("map"));
   output.info = info;
+  output.info.width = info.height;
+  output.info.height = info.width;
   output.info.map_load_time = ros::Time::now();
   output.header.frame_id = frame_id;
   output.header.stamp = ros::Time::now();

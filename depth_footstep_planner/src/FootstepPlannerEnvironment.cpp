@@ -281,8 +281,8 @@ FootstepPlannerEnvironment::occupied(PlanningState& s)
 {
 //  ivdebug++;
   // ! Debug cout
-  // std::cout<<"1 start occupied"<<std::endl;
-  // std::cout<<"0 PlanningState [s.getX,s.getY] ["<<s.getX()<<","<<s.getY()<<"]"<<std::endl;
+  std::cout<<"1 start occupied"<<std::endl;
+  std::cout<<"0 PlanningState [s.getX,s.getY] ["<<s.getX()<<","<<s.getY()<<"]"<<std::endl;
 
   double x = cell_2_state(s.getX(), ivCellSize);
   double y = cell_2_state(s.getY(), ivCellSize);
@@ -290,7 +290,7 @@ FootstepPlannerEnvironment::occupied(PlanningState& s)
   // will not be implimented
 //  if (ivMapPtr->isOccupiedAt(x,y))
 //    return true;
-  // std::cout<<"0 cell_2_state [x,y] ["<<s.getX()<<","<<s.getY()<<"]"<<std::endl;
+  std::cout<<"0 cell_2_state [x,y] ["<<s.getX()<<","<<s.getY()<<"]"<<std::endl;
 
   double theta = angle_cell_2_state(s.getTheta(), ivNumAngleBins);
   double theta_cos = cos(theta);
@@ -303,7 +303,7 @@ FootstepPlannerEnvironment::occupied(PlanningState& s)
   else // leg == RLEG
     y += theta_sin*ivOriginFootShiftX - theta_cos*ivOriginFootShiftY;
   
-  // std::cout<<"0 FootShift [x,y] ["<<x<<","<<y<<"]"<<std::endl;
+  std::cout<<"0 FootShift [x,y] ["<<x<<","<<y<<"]"<<std::endl;
 
   int X = state_2_cell(x,ivCellSize);
   int Y = state_2_cell(y,ivCellSize);
@@ -317,15 +317,15 @@ FootstepPlannerEnvironment::occupied(PlanningState& s)
     // ROS_ERROR(" Foot is outside the map :( ");
     return false;
   }
-  // std::cout<<"Matrecies: depth: ["<<ivMapPtr->depthMap().rows<<"x"<<ivMapPtr->depthMap().cols;
-  // std::cout<<"    Feasibleity Step: ["<<ivModelOutputPtr->rows<<"x"<<ivModelOutputPtr->cols<<"]"<<std::endl;
-  // std::cout<<"0 collision_check [X,Y] ["<<X<<","<<Y<<"]"<<std::endl;
+  std::cout<<"Matrecies: depth: ["<<ivMapPtr->depthMap().rows<<"x"<<ivMapPtr->depthMap().cols;
+  std::cout<<"    Feasibleity Step: ["<<ivModelOutputPtr->rows<<"x"<<ivModelOutputPtr->cols<<"]"<<std::endl;
+  std::cout<<"0 collision_check [X,Y] ["<<X<<","<<Y<<"]"<<std::endl;
 
   bool result = collision_check(X, Y, s.getTheta(),new_depth,
                                 disc_val(ivFootsizeX,ivCellSize), disc_val(ivFootsizeY,ivCellSize),
                          ivCollisionCheckMethod, *ivMapPtr, ivModelOutputPtr);
   s.setDepth(new_depth);
-  // std::cout<<"5 end occupied"<<std::endl;
+  std::cout<<"5 end occupied"<<std::endl;
 
   return result;
 
