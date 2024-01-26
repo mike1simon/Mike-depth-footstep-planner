@@ -147,7 +147,9 @@ public:
      * @param downsample edge length of block in main grid that corresponds to a single cell in this grid
      * @param initial_dynamic_bucket_size Initial dynamic bucket size, set to 0 for fixed size
      */
-    DEPTH2DGridSearch(int width_x, int height_y, float cellsize_m,float Depth_resolution, int downsample=1, int initial_dynamic_bucket_size=32);
+    // DEPTH2DGridSearch(int width_x, int height_y, float cellsize_m, float Depth_resolution, int downsample=1, int initial_dynamic_bucket_size=32);
+    DEPTH2DGridSearch(int width_x, int height_y, float cellsize_m, float Depth_resolution, int downsample=1, double maximumStepHight=0.15, double maximumStepReachability=0.25,
+  double max_attitude = 4.0, double min_attitude = 0.0,  double MAX_RESOLUTION = 65536, int initial_dynamic_bucket_size=32);
     ~DEPTH2DGridSearch()
     {
         destroy();
@@ -266,7 +268,8 @@ private:
     float cellSize_m_;
     float Depth_resolution_;
     // ! temp variables
-    float max_attitude, min_attitude, MAX_RESOLUTION, Depth_threshold;
+    float max_attitude_, min_attitude_, MAX_RESOLUTION_, Depth_threshold_;
+    int maximumStepReachability_;
     //search iteration
     int iteration_;
 

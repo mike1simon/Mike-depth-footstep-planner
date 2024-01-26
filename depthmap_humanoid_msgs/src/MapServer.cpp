@@ -11,13 +11,10 @@ MapServer::MapServer(const std::string& fname, double res){
   ros::NodeHandle private_nh("~");
 
   mapImg = loadMapFromYamlFile(fname,res,metaData);
-//  cv::namedWindow("test");
-//  cv::imshow("test",mapImg);
-//  cv::waitKey(0);
 
   grayScaleMap8 = turnMaptoOccupancyGrid(mapImg,metaData);
   grayScaleMap16 = turnMaptoGreyScaleMap16bit(mapImg,metaData);
-  depthmap = turnMaptoDepthMap(mapImg,metaData);
+  depthmap = turnMaptoDepthMap(mapImg, metaData);
   pointCloud = turnMaptoPointCloud(mapImg,metaData);
 //  map_8bit_srv = nh.advertiseService("static_map", &MapServer::mapCallback, this);
 
@@ -126,7 +123,7 @@ cv::Mat MapServer::loadMapFromYamlFile(const std::string& fname, double res, nav
       ROS_ERROR("error while reading the map.");
       exit(-1);
     }
-    IMG.convertTo(IMG,CV_16UC1);
+    IMG.convertTo(IMG, CV_16UC1);
 
   }
   catch (std::runtime_error e)
@@ -151,51 +148,43 @@ cv::Mat MapServer::loadMapFromYamlFile(const std::string& fname, double res, nav
            info.width,
            info.height,
            res);
+  cv::Mat map_image(info.height, info.width, CV_16UC1);
+  for (int j = 0; j < static_cast<int>(info.height); j++) {
+      for (int i = 0; i < static_cast<int>(info.width); i++) {
+          map_image.at<ushort>(j, i) = IMG.at<ushort>(info.height - j - 1, i);
+      }
+  }
 
-  return IMG;
+  return map_image;
 }
-nav_msgs::OccupancyGrid MapServer::turnMaptoOccupancyGrid(cv::Mat IMG, nav_msgs::MapMetaData info){
+
+nav_msgs::OccupancyGrid MapServer::turnMaptoOccupancyGrid(cv::Mat IMG, nav_msgs::MapMetaData info) {
   nav_msgs::OccupancyGrid output;
-  
   std::string frame_id;
   nh.param("frame_id", frame_id, std::string("map"));
   output.info = info;
-  output.info.width = info.height;
-  output.info.height = info.width;
   output.info.map_load_time = ros::Time::now();
   output.header.frame_id = frame_id;
   output.header.stamp = ros::Time::now();
   output.data.resize(info.width * info.height);
 
-  for(int i=0; i<static_cast<int>(info.height) ; i++)
-      for(int j=0; j<static_cast<int>(info.width); j++) {
-        int raw_value = IMG.at<ushort>(i,j);
-        int8_t greyValue = static_cast<int8_t>(100-(raw_value/(655)));
-        // ! old mapping
-        // int index = MAP_IDX(static_cast<int>(info.width),j,static_cast<int>(info.height) - i - 1);
-        //int index = invertYandSwitchXY(static_cast<int>(info.height),i,static_cast<int>(info.width) - j - 1);
-        //int index = map_indx(static_cast<int>(info.height),i,static_cast<int>(info.height) - j - 1);
-        //int index = invertY(static_cast<int>(info.height),static_cast<int>(info.width),i,j);
-        int index = i + j*info.height;
-        output.data[static_cast<unsigned long>(index) ] = greyValue;
-        //output.data[i*info.height+j] = greyValue;
+  for (int j = 0; j < static_cast<int>(info.height); j++) {
+      for (int i = 0; i < static_cast<int>(info.width); i++) {
+          int raw_value = IMG.at<ushort>(j, i);
+          int8_t greyValue = static_cast<int8_t>(100 - (raw_value / 655));
+          // new after hanging the loadMapFromYamlFile function
+          int index = j * info.width + i;
+          output.data[static_cast<unsigned long>(index)] = greyValue;
       }
+  }
   return output;
 }
 
-// ! custom msg type deprecated
-// depthmap_humanoid_msgs::GreyScaleMap16bit MapServer::turnMaptoGreyScaleMap16bit(cv::Mat IMG, nav_msgs::MapMetaData info){
 sensor_msgs::ImagePtr MapServer::turnMaptoGreyScaleMap16bit(cv::Mat IMG, nav_msgs::MapMetaData info){
 
   std::string frame_id;
   nh.param("frame_id", frame_id, std::string("map"));
   
-  // ! custom msg type deprecated
-  // depthmap_humanoid_msgs::GreyScaleMap16bit output;
-  // output.info = info;
-  // output.info.map_load_time = ros::Time::now();
-  // output.header.frame_id = frame_id;
-  // output.header.stamp = ros::Time::now();
 
   cv_bridge::CvImage cv_image;
   cv_image.image = IMG;
@@ -203,23 +192,6 @@ sensor_msgs::ImagePtr MapServer::turnMaptoGreyScaleMap16bit(cv::Mat IMG, nav_msg
   cv_image.header.stamp = ros::Time::now();
   cv_image.encoding = sensor_msgs::image_encodings::TYPE_16UC1;
 
-  // ! custom msg type deprecated
-  // output.data.resize(info.width * info.height);
-  // output.maximum_attitude = static_cast<float>(max_attitude);
-  // output.minimum_attitude = static_cast<float>(min_attitude);
-  
-  // for(int i=0; i<static_cast<int>(info.height) ; i++)
-  //     for(int j=0; j<static_cast<int>(info.width); j++) {
-  //       ushort raw_value = IMG.at<ushort>(i,j);
-  //       //int8_t greyValue = static_cast<int8_t>(100-(x/(655)));
-  //       int index = MAP_IDX(static_cast<int>(info.width),j,static_cast<int>(info.height) - i - 1);
-  //       //int index = invertYandSwitchXY(static_cast<int>(info.height),i,static_cast<int>(info.width) - j - 1);
-  //       //int index = map_indx(static_cast<int>(info.height),i,static_cast<int>(info.height) - j - 1);
-  //       //int index = invertY(static_cast<int>(info.height),static_cast<int>(info.width),i,j);
-  //       //output.data[static_cast<unsigned long>(index) ] = greyValue;
-  //       //output.data[i*info.height+j] = greyValue;
-  //       output.data[static_cast<unsigned long>(index)] = raw_value;
-  //     }
 
   return cv_image.toImageMsg();
 
@@ -236,22 +208,6 @@ depthmap_humanoid_msgs::DepthMap MapServer::turnMaptoDepthMap(cv::Mat IMG, nav_m
   output.header.frame_id = frame_id;
   output.header.stamp = ros::Time::now();
 
-  // output.data.resize(info.width * info.height);
-  // for(int i=0; i<static_cast<int>(info.height) ; i++)
-  //     for(int j=0; j<static_cast<int>(info.width); j++) {
-  //       ushort raw_value = IMG.at<ushort>(i,j);
-  //       //! this should be (max_attitude - min_attitude)/65536 + min_attitude
-  //       double depth_value = raw_value*(max_attitude/65536.0)+min_attitude;
-  //       //depth_value = static_cast<double>(round(1000 * static_cast<int>(depth_value)))  / 1000.0;
-  //       int index = MAP_IDX(static_cast<int>(info.width),j,static_cast<int>(info.height) - i - 1);
-  //       //int index = invertYandSwitchXY(static_cast<int>(info.height),i,static_cast<int>(info.width) - j - 1);
-  //       //int index = map_indx(static_cast<int>(info.height),i,static_cast<int>(info.height) - j - 1);
-  //       //int index = invertY(static_cast<int>(info.height),static_cast<int>(info.width),i,j);
-  //       //output.data[static_cast<unsigned long>(index) ] = greyValue;
-  //       //output.data[i*info.height+j] = greyValue;
-  //       output.data[static_cast<unsigned long>(index)] = static_cast<float>(depth_value);
-  //     }
-  // return output;
 
   cv::Mat DepthMap = IMG.clone();
   DepthMap.convertTo(DepthMap, CV_32FC1);
@@ -262,7 +218,6 @@ depthmap_humanoid_msgs::DepthMap MapServer::turnMaptoDepthMap(cv::Mat IMG, nav_m
   cv_image.header.stamp = ros::Time::now();
   cv_image.encoding = sensor_msgs::image_encodings::TYPE_32FC1;
   output.map = *cv_image.toImageMsg();
-  // ROS_ERROR("STEP: %ld , WIDTH: %ld , Hight: %ld",output.map.step,output.map.width,output.map.height);
   return output;
 }
 
@@ -282,10 +237,8 @@ PointCloud::Ptr MapServer::turnMaptoPointCloud(cv::Mat IMG,nav_msgs::MapMetaData
         int raw_value = IMG.at<ushort>(i,j);
         unsigned char color_value = static_cast<unsigned char>(raw_value/256);
         double depth_value = raw_value*(max_attitude/65536.0)+min_attitude;
-        // double y = static_cast<double>(info.resolution)*(static_cast<double>(info.height)-static_cast<double>(i) +0.5);
-        // double x = static_cast<double>(info.resolution)*(static_cast<double>(j)+0.5);
-        double x = static_cast<double>(info.resolution)*(static_cast<double>(i) +0.5);
-        double y = static_cast<double>(info.resolution)*(static_cast<double>(j)+0.5);
+        double x = static_cast<double>(info.resolution)*(static_cast<double>(j) +0.5);
+        double y = static_cast<double>(info.resolution)*(static_cast<double>(i)+0.5);
 
         tf::Vector3 P_old(x,y,depth_value);
         tf::Quaternion q;
@@ -297,9 +250,6 @@ PointCloud::Ptr MapServer::turnMaptoPointCloud(cv::Mat IMG,nav_msgs::MapMetaData
         tf::Transform T(q,t);
         tf::Vector3 P = T*P_old;
         pcl::PointXYZRGB p;
-//        p._PointXYZRGB::x = static_cast<float>(x);
-//        p._PointXYZRGB::y = static_cast<float>(y);
-//        p._PointXYZRGB::z = static_cast<float>(depth_value);
         p._PointXYZRGB::x = static_cast<float>(P.x());
         p._PointXYZRGB::y = static_cast<float>(P.y());
         p._PointXYZRGB::z = static_cast<float>(P.z());

@@ -81,7 +81,9 @@ unsigned char getCostN(unsigned char **FeasibilityGrid2D, int x, int y, int resa
 }
 
 //---------------------initialization and destruction routines--------------------------------------------------------
-DEPTH2DGridSearch::DEPTH2DGridSearch(int width_x, int height_y, float cellsize_m, float Depth_resolution, int downsample, int initial_dynamic_bucket_size)
+DEPTH2DGridSearch::DEPTH2DGridSearch(int width_x, int height_y, float cellsize_m,
+ float Depth_resolution, int downsample, double maximumStepHight, double maximumStepReachability,
+  double max_attitude, double min_attitude,  double MAX_RESOLUTION, int initial_dynamic_bucket_size)
 {
     iteration_ = 0;
     searchStates2D_ = NULL;
@@ -91,16 +93,11 @@ DEPTH2DGridSearch::DEPTH2DGridSearch(int width_x, int height_y, float cellsize_m
     height_ = height_y / downsample;
     cellSize_m_ = cellsize_m * downsample;
     Depth_resolution_ = Depth_resolution;
-    // ?? Some params comments
-    // resolution: 0.005
-    // origin: [0.0, 0.0, 0.0]
-    // skip_pixels_in_pointcloud: [10,10]
-    // max_attitude: 4.0
-    // min_attitude: 0.0
-    max_attitude = 4.0;
-    min_attitude = 0.0;
-    MAX_RESOLUTION = 65536;
-    Depth_threshold = 0.0999;
+    maximumStepReachability_ = static_cast<int>(maximumStepReachability / cellSize_m_);
+    max_attitude_ = max_attitude;
+    min_attitude_ = min_attitude;
+    MAX_RESOLUTION_ = MAX_RESOLUTION;
+    Depth_threshold_ = maximumStepHight;
     // choose appropriate hard-coded getCost for resample amount
     switch(downsample_)
     {
@@ -345,6 +342,7 @@ bool DEPTH2DGridSearch::search(unsigned char** FeasibilityGrid2D, float** Depth2
 {
     startx_c /= downsample_;
     starty_c /= downsample_;
+
     goalx_c /= downsample_;
     goaly_c /= downsample_;
 
@@ -390,7 +388,6 @@ bool DEPTH2DGridSearch::search_withheap(unsigned char** FeasibilityGrid2D, float
 
     //set the term. condition
     term_condition_usedlast = termination_condition;
-
     //check the validity of start/goal
     if (!withinMap(startx_c, starty_c) || !withinMap(goalx_c, goaly_c)) {
         SBPL_ERROR("ERROR: grid2Dsearch is called on invalid start (%d %d) or goal(%d %d)\n", startx_c, starty_c,
@@ -407,7 +404,7 @@ bool DEPTH2DGridSearch::search_withheap(unsigned char** FeasibilityGrid2D, float
     //seed the search
     searchExpState->setCost(0);
     // !! Debugging change the hard coded 20 to a parameter
-    searchExpState->setReachability(20);
+    searchExpState->setReachability(maximumStepReachability_);
 
     key = searchExpState->getCost();
     if (termination_condition == SBPL_2DGRIDSEARCH_TERM_CONDITION_OPTPATHFOUND)
@@ -486,48 +483,34 @@ bool DEPTH2DGridSearch::search_withheap(unsigned char** FeasibilityGrid2D, float
             // if (mapcost >= obsthresh) //obstacle encountered
             // continue;
 
-            // ?? check Reachability value when obstacle encountered is it reachable (process it)
-            // ?? is it not reachable ignore it
+            // check Reachability value when obstacle encountered is it reachable (process it)
+            // is it not reachable ignore it
             if (mapcost >= obsthresh && !searchExpState->isValid()) //obstacle encountered
-                continue; // ? don't take this state into account bcz its not reachable 
-
-            
-            // todo add the hight diffrence condition
-            // ? here
-            // if()
-            max_attitude = 4.0;
-            min_attitude = 0.0;
-            MAX_RESOLUTION = 65536;
-            
-
-
-
+                // don't take this state into account bcz its not reachable
+                continue;
             //get the predecessor
             searchPredState = &searchStates2D_[newx][newy];
 
-            // ? handel the not valid but still interesting states and reduce there Reachability
+            // handel the not valid but still interesting states and reduce there Reachability
             if(mapcost >= obsthresh)
                 searchPredState->setReachability(searchExpState->getReachability() - 1);
-            else // ?? in case of the PredState is Valid and the last state is not
-                 // ?? (reset the reachability variable to its initial state)
+            else // in case of the PredState is Valid and the last state is not
+                 // (reset the reachability variable to its initial state)
                 // !! Debugging change the hard coded 20 to a parameter
-                searchPredState->setReachability(20);
+                searchPredState->setReachability(maximumStepReachability_);
             
+            // check hight difference if it is not reachable don't process it.
             float depth_difference = Depth2D[newx][newy] - Depth2D[exp_x][exp_y];
-            // if(depth_difference < 0) depth_difference *= -1;
-            if(std::abs(depth_difference) > Depth_threshold){
-                // ROS_ERROR("Dold: %3.4f, Dnew: %3.4f, Ddiff: %3.4f",Depth2D[exp_x][exp_y], Depth2D[newx][newy], depth_difference);
+            if(std::abs(depth_difference) > Depth_threshold_)
                 continue;
-            }else{
-                // ROS_INFO("Dold: %3.4f, Dnew: %3.4f, Ddiff: %3.4f",Depth2D[exp_x][exp_y], Depth2D[newx][newy], depth_difference);
-            }
+
             // * the cost for now is either 0 or 255 (can be changed)
             // * this means that the new int cost = 1 * dxy_distance_mm_ (distance from the current expState)
             // // ** this could be changed to add in the reduced Reachability length 
             // int cost = (mapcost + 1) * dxy_distance_mm_[dir];
             // ** this could be changed to add in the reduced Reachability length into the cost 
             // !! Debugging test the cost of 2d search
-            int cost = (0.8 *(15.0 - searchPredState->getReachability())/15.0 +1) * dxy_distance_mm_[dir];
+            int cost = (0.8 *(maximumStepReachability_ - searchPredState->getReachability())/maximumStepReachability_ +1) * dxy_distance_mm_[dir];
 
             // * update the cost of the predecessor and add it to the heap
             //update predecessor if necessary

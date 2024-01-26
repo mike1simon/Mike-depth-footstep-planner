@@ -153,6 +153,9 @@ class Map_Seg_Server:
         if isinstance(arr, np.ma.MaskedArray):
                 # We assume that the masked value are already -1, for speed
                 arr = arr.data
+        # Flip the y-axis to align with ROS OccupancyGrid format
+        # new edit to flip while reading the map
+        # arr = np.flipud(arr)
         grid.data = arr.ravel()
         grid.info = info or MapMetaData()
         grid.info.height = arr.shape[0]
@@ -234,7 +237,7 @@ class Map_Seg_Server:
         # print("output shape: ", self.output.shape, "data type: ", self.output.dtype)  
         # print("output_vis[15:25,15:25]: ")  
         # print(self.output_vis[15:25,15:25])  
-        self.output_vis = self.output_vis.T
+        # self.output_vis = self.output_vis
         self.vis_msg = self.numpy_to_occupancy_grid(self.output_vis)
         self.vis_pub.publish(self.vis_msg)
         self.output_msg = self.output_to_msg(self.output)

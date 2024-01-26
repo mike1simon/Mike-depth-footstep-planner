@@ -11,7 +11,8 @@
                 "~/thesis_ws/src/Mike-depth-footstep-planner/depth_footstep_planner/**",
                 "~/thesis_ws/src/Mike-depth-footstep-planner/depth_footstep_planner/include/**",
                 "~/thesis_ws/src/Mike-depth-footstep-planner/depthmap_humanoid_msgs/include/**",
-                "/usr/include/opencv4"
+                "/usr/include/opencv4",
+                "/usr/include/pcl-1.10"
             ],
             "defines": [],
             "compilerPath": "/usr/bin/gcc",
