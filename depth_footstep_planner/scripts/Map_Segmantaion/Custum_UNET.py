@@ -17,14 +17,18 @@ from sensor_msgs.msg import Image
 from std_msgs.msg import Header
 
 # from typing import List # for specifing List type and autocomplete for it
+
+
 class conv_block(nn.Module):
-    def __init__(self, in_c, out_c,kernal1=3,kernal2=3):
+    def __init__(self, in_c, out_c, kernal1=3, kernal2=3):
         super().__init__()
 
-        self.conv1 = nn.Conv2d(in_c, out_c, kernel_size=kernal1, padding=int(kernal1/2))
+        self.conv1 = nn.Conv2d(in_c, out_c, kernel_size=kernal1,
+                               padding=int(kernal1/2))
         self.bn1 = nn.BatchNorm2d(out_c)
 
-        self.conv2 = nn.Conv2d(out_c, out_c, kernel_size=kernal2, padding=int(kernal2/2))
+        self.conv2 = nn.Conv2d(out_c, out_c, kernel_size=kernal2,
+                               padding=int(kernal2/2))
         self.bn2 = nn.BatchNorm2d(out_c)
 
         self.relu = nn.ReLU()
@@ -40,11 +44,12 @@ class conv_block(nn.Module):
 
         return x
 
+
 class encoder_block(nn.Module):
-    def __init__(self, in_c, out_c,kernal1=3,kernal2=3):
+    def __init__(self, in_c, out_c, kernal1=3, kernal2=3):
         super().__init__()
 
-        self.conv = conv_block(in_c, out_c,kernal1=3,kernal2=3)
+        self.conv = conv_block(in_c, out_c, kernal1=3, kernal2=3)
         self.pool = nn.MaxPool2d((2, 2))
 
     def forward(self, inputs):
@@ -52,12 +57,14 @@ class encoder_block(nn.Module):
         p = self.pool(x)
 
         return x, p
-    
+
+
 class decoder_block(nn.Module):
     def __init__(self, in_c, out_c):
         super().__init__()
 
-        self.up = nn.ConvTranspose2d(in_c, out_c, kernel_size=2, stride=2, padding=0)
+        self.up = nn.ConvTranspose2d(in_c, out_c, kernel_size=2,
+                                     stride=2, padding=0)
         self.conv = conv_block(out_c+out_c, out_c)
 
     def forward(self, inputs, skip):
@@ -67,12 +74,13 @@ class decoder_block(nn.Module):
 
         return x
 
+
 class Custom_UNET_Model(nn.Module):
     def __init__(self):
         super().__init__()
-        
+
         """ Encoder """
-        self.e1 = encoder_block(1, 64,kernal1=7,kernal2=5)
+        self.e1 = encoder_block(1, 64, kernal1=7, kernal2=5)
         self.e2 = encoder_block(64, 128, kernal1=5, kernal2=3)
 
         """ Bottleneck """
@@ -87,7 +95,7 @@ class Custom_UNET_Model(nn.Module):
         self.last_layer_activation = nn.Sigmoid()
 
     def forward(self, inputs):
-        
+
         """ Encoder """
         s1, p1 = self.e1(inputs)
         s2, p2 = self.e2(p1)
@@ -108,51 +116,58 @@ class Custom_UNET_Model(nn.Module):
 # data_transforms = transforms.Compose([
 #         transforms.Normalize((65534.0/2.0), (65534.0/2.0))
 #         ])
+
+
 class Map_Seg_Server:
-    def __init__(self,model_name = "model2.pth", root_path = None,
-             device = None, data_transforms = None, 
-             output_pub_name = "/model_output", vis_pub_name = "/model_output_vis",
-             sub_name = "/map16bit", service_name = "/Map_Seg_service"):
+    def __init__(self, model_name="model2.pth", root_path=None,
+                 device=None, data_transforms=None,
+                 output_pub_name="/model_output",
+                 vis_pub_name="/model_output_vis",
+                 sub_name="/map16bit", service_name="/Map_Seg_service"):
         self.model_name = model_name
         rospack = rospkg.RosPack()
         if root_path is None:
-            self.root_path = os.path.join(rospack.get_path('depth_footstep_planner') , "model")
+            self.root_path = os.path.join(
+                rospack.get_path('depth_footstep_planner'), "model")
         else:
             self.root_path = root_path
-        self.model_output_path = os.path.join(self.root_path,"model_output")
-        self.model_original_path = os.path.join(self.root_path,"original")
-        self.model_input_path = os.path.join(self.root_path,"input")
-        self.original_output_path = os.path.join(self.root_path,"output")
-        self.model_path = os.path.join(self.root_path,"models",self.model_name)
-        
+        self.model_output_path = os.path.join(self.root_path, "model_output")
+        self.model_original_path = os.path.join(self.root_path, "original")
+        self.model_input_path = os.path.join(self.root_path, "input")
+        self.original_output_path = os.path.join(self.root_path, "output")
+        self.model_path = os.path.join(
+            self.root_path, "models", self.model_name)
         if device is None:
-            self.device = torch.device('cuda' if torch.cuda.is_available() else 'cpu')
+            self.device = torch.device(
+                'cuda' if torch.cuda.is_available() else 'cpu')
         else:
             self.device = device
         if data_transforms is None:
             self.data_transforms = transforms.Compose([
-                transforms.Normalize((65534.0/2.0), (65534.0/2.0))      ])
+                transforms.Normalize((65534.0/2.0), (65534.0/2.0))])
         else:
             self.data_transforms = data_transforms
         self.criterion = nn.BCELoss()
 
         self.load_model()
 
-        self.output_pub = rospy.Publisher(output_pub_name,Image,queue_size=10,latch=True)
-        self.vis_pub = rospy.Publisher(vis_pub_name,OccupancyGrid,queue_size=10,latch=True)
+        self.output_pub = rospy.Publisher(output_pub_name, Image,
+                                          queue_size=10, latch=True)
+        self.vis_pub = rospy.Publisher(vis_pub_name, OccupancyGrid,
+                                       queue_size=10, latch=True)
         self.Map_Seg_sub = rospy.Subscriber(sub_name, Image, self.Map_Seg_cb)
         # self.Service = rospy.Service(service_name, My_Service_Class)
-    
+
     def numpy_to_occupancy_grid(self, arr: np.ndarray, info=None):
         if not len(arr.shape) == 2:
-                raise TypeError('Array must be 2D')
+            raise TypeError('Array must be 2D')
         if not arr.dtype == np.int8:
-                raise TypeError('Array must be of int8s')
+            raise TypeError('Array must be of int8s')
 
         grid = OccupancyGrid()
         if isinstance(arr, np.ma.MaskedArray):
-                # We assume that the masked value are already -1, for speed
-                arr = arr.data
+            # We assume that the masked value are already -1, for speed
+            arr = arr.data
         # Flip the y-axis to align with ROS OccupancyGrid format
         # new edit to flip while reading the map
         # arr = np.flipud(arr)
@@ -168,55 +183,90 @@ class Map_Seg_Server:
         return grid
 
     def output_to_msg(self, output: np.ndarray):
-        output: np.ndarray = 255* output.astype("uint8")
+        output: np.ndarray = 255 * output.astype("uint8")
         bridge = CvBridge()
         output_msg = bridge.cv2_to_imgmsg(output, encoding="8UC1")
         return output_msg
 
-    def scale_image(self, image : np.ndarray):
+    def scale_image(self, image: np.ndarray):
         # grab the image dimensions
         h = image.shape[0]
         w = image.shape[1]
-        new_image: np.ndarray = np.zeros((int(image.shape[0]/2),int(image.shape[1]/2)),image.dtype)
+        new_image: np.ndarray = np.zeros((int(image.shape[0]/2),
+                                          int(image.shape[1]/2)), image.dtype)
         # loop over the image, pixel by pixel
-        for y in range(0, h,2):
-            for x in range(0, w,2):
+        for y in range(0, h, 2):
+            for x in range(0, w, 2):
                 # threshold the pixel
                 # new_image[int(y/2), int(x/2)] = image[y, x,0]
                 new_image[int(y/2), int(x/2)] = image[y, x]
-                
         # return the thresholded image
         return new_image
 
-    def load_model(self,model_name = None, root_path = None, device = None, criterion = None):
+    def load_model(self, model_name=None, root_path=None, device=None,
+                   criterion=None):
         if root_path is not None:
             self.root_path = root_path
-            self.model_output_path = os.path.join(self.root_path,"model_output")
-            self.model_original_path = os.path.join(self.root_path,"original")
-            self.model_input_path = os.path.join(self.root_path,"input")
-            self.original_output_path = os.path.join(self.root_path,"output")
-        self.model_path = os.path.join(self.root_path,"models",self.model_name)
+            self.model_output_path = os.path.join(self.root_path,
+                                                  "model_output")
+            self.model_original_path = os.path.join(self.root_path, "original")
+            self.model_input_path = os.path.join(self.root_path, "input")
+            self.original_output_path = os.path.join(self.root_path, "output")
+        self.model_path = os.path.join(self.root_path, "models",
+                                       self.model_name)
         if device is not None:
             self.device = device
         self.model = Custom_UNET_Model().to(self.device)
         if criterion is not None:
             self.criterion = criterion
-        rospy.loginfo("Feasible Footsteps Segmentation Node Loaded UNET Model from: %s", self.model_path)
+        rospy.loginfo("Feasible Footsteps Segmentation Node Loaded\
+            UNET Model from: %s", self.model_path)
         self.model.load_state_dict(torch.load(self.model_path))
         # self.model.load_state_dict(self.model_path)
         return self.model
 
+    def pad_image_to_divisible_by_8(self, tensor):
+        """
+        Pads the tensor so that its spatial dimensions are divisible by 8.
+        """
+        height, width = tensor.shape[-2], tensor.shape[-1]
+        pad_height = (-height) % 8
+        pad_width = (-width) % 8
 
-    def run_model(self, msg: Image, model = None):
+        # Padding format: (pad_left, pad_right, pad_top, pad_bottom)
+        padding = (0, pad_width, 0, pad_height)
+        padded_tensor = F.pad(tensor, padding, "constant", 0)
+        return padded_tensor, padding
+
+    def remove_padding(self, tensor, padding):
+        """
+        Removes the padding from a tensor.
+        """
+        _, pad_width, _, pad_height = padding
+        height, width = tensor.shape[-2], tensor.shape[-1]
+        return tensor[..., :height - pad_height, :width - pad_width]
+
+    def run_model(self, msg: Image, model=None):
         bridge = CvBridge()
         original_image = bridge.imgmsg_to_cv2(msg, msg.encoding)
         # print("recieved input size: ",original_image.shape)
         input_image = self.scale_image(original_image)
         input = torch.from_numpy(input_image.astype(np.float32))
-        input = input.view(1,input.shape[0],input.shape[1])
+        # Pad the tensor if necessary
+        # Ensure the tensor is in the shape [C, H, W]
+        if input.dim() == 2:
+            input = input.unsqueeze(0)  # Add channel dimension if missing
+        padded_input, padding = self.pad_image_to_divisible_by_8(input)
+        input = padded_input.unsqueeze(0)
+        # Reshape the tensor to the shape [1, C, H, W]
+
+        # Apply any data transforms if necessary
         input = self.data_transforms(input)
-        input = input.view(1,input.shape[0],input.shape[1],input.shape[2])
         input = input.to(self.device)
+        # input = input.view(1, input.shape[0], input.shape[1])
+        # input = self.data_transforms(input)
+        # input = input.view(1, input.shape[0], input.shape[1], input.shape[2])
+        # input = input.to(self.device)
         # output = output.to(device)
 
         if model is not None:
@@ -225,21 +275,18 @@ class Map_Seg_Server:
         # Forward pass
         with torch.no_grad():
             model_output: Tensor = self.model(input)
-        output_thresholded: np.ndarray = np.round(model_output.numpy()[0,0],0)
-        # print("thresholded output shape and type", output_thresholded.shape, output_thresholded.dtype)
-
+        output_thresholded = np.round(model_output.numpy()[0, 0], 0)
+        output_thresholded = self.remove_padding(output_thresholded, padding)
         return output_thresholded
 
     def Map_Seg_cb(self, msg: Image):
-        rospy.loginfo("Feasible Footsteps Segmentation Node Recieved Map (Request).")
-        self.output: np.ndarray =  self.run_model(msg)
-        self.output_vis: np.ndarray =  (50* self.output).astype("int8")
-        # print("output shape: ", self.output.shape, "data type: ", self.output.dtype)  
-        # print("output_vis[15:25,15:25]: ")  
-        # print(self.output_vis[15:25,15:25])  
-        # self.output_vis = self.output_vis
+        rospy.loginfo("Feasible Footsteps Segmentation Node\
+            Recieved Map (Request).")
+        self.output: np.ndarray = self.run_model(msg)
+        self.output_vis: np.ndarray = (50 * self.output).astype("int8")
         self.vis_msg = self.numpy_to_occupancy_grid(self.output_vis)
         self.vis_pub.publish(self.vis_msg)
         self.output_msg = self.output_to_msg(self.output)
         self.output_pub.publish(self.output_msg)
-        rospy.loginfo("Feasible Footsteps Segmentation Node Publishing Results(Model Outputs).")
+        rospy.loginfo("Feasible Footsteps Segmentation Node \
+            Publishing Results(Model Outputs).")
