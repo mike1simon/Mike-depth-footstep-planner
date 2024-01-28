@@ -79,6 +79,10 @@ unsigned char getCostN(unsigned char **FeasibilityGrid2D, int x, int y, int resa
 
     return maximum;
 }
+unsigned char getCostDownSampled(unsigned char** FeasibilityGrid2D, int x, int y, int /*resample*/)
+{
+    return FeasibilityGrid2D[x][y];
+}
 
 //---------------------initialization and destruction routines--------------------------------------------------------
 DEPTH2DGridSearch::DEPTH2DGridSearch(int width_x, int height_y, float cellsize_m,
@@ -106,6 +110,11 @@ DEPTH2DGridSearch::DEPTH2DGridSearch(int width_x, int height_y, float cellsize_m
     case 3: getCost = &getCostT<3>; break;
     case 4: getCost = &getCostT<4>; break;
     case 5: getCost = &getCostT<5>; break;
+    case 6: getCost = &getCostT<6>; break;
+    case 7: getCost = &getCostT<7>; break;
+    case 8: getCost = &getCostT<8>; break;
+    case 9: getCost = &getCostT<9>; break;
+    case 10: getCost = &getCostT<10>; break;
     default:
         getCost = &getCostN;
     }
@@ -445,7 +454,7 @@ bool DEPTH2DGridSearch::search_withheap(unsigned char** FeasibilityGrid2D, float
         //get the next state for expansion
         searchExpState = (DEPTH_2DGridSearchState*)OPEN2D_->deleteminheap();
         numofExpands++;
-
+        
         int exp_x = searchExpState->x;
         int exp_y = searchExpState->y;
 
@@ -453,7 +462,7 @@ bool DEPTH2DGridSearch::search_withheap(unsigned char** FeasibilityGrid2D, float
         pbClosed[exp_x + width_ * exp_y] = 1;
 
         //iterate over successors
-        int expcost =  getCost(FeasibilityGrid2D, exp_x, exp_y, downsample_);
+        int expcost =  getCostDownSampled(FeasibilityGrid2D, exp_x, exp_y, downsample_);
         for (int dir = 0; dir < SBPL_2DGRIDSEARCH_NUMOF2DDIRS; dir++) {
             int newx = exp_x + dx_[dir];
             int newy = exp_y + dy_[dir];
@@ -467,13 +476,13 @@ bool DEPTH2DGridSearch::search_withheap(unsigned char** FeasibilityGrid2D, float
 
             //compute the cost (the cost can't be less than current state cost)
             //in this implementation its either 0 or 255 so we just check if it is an obstacle make it 255
-            int mapcost = __max(getCost(FeasibilityGrid2D, newx, newy, downsample_), expcost);
+            int mapcost = __max(getCostDownSampled(FeasibilityGrid2D, newx, newy, downsample_), expcost);
 
 #if SBPL_2DGRIDSEARCH_NUMOF2DDIRS > 8
             if(dir > 7) {
                 //check two more cells through which the action goes
-                mapcost = __max(mapcost, getCost(FeasibilityGrid2D, exp_x + dx0intersects_[dir], exp_y + dy0intersects_[dir], downsample_));
-                mapcost = __max(mapcost, getCost(FeasibilityGrid2D, exp_x + dx1intersects_[dir], exp_y + dy1intersects_[dir], downsample_));
+                mapcost = __max(mapcost, getCostDownSampled(FeasibilityGrid2D, exp_x + dx0intersects_[dir], exp_y + dy0intersects_[dir], downsample_));
+                mapcost = __max(mapcost, getCostDownSampled(FeasibilityGrid2D, exp_x + dx1intersects_[dir], exp_y + dy1intersects_[dir], downsample_));
             }
 #endif
 
@@ -510,7 +519,8 @@ bool DEPTH2DGridSearch::search_withheap(unsigned char** FeasibilityGrid2D, float
             // int cost = (mapcost + 1) * dxy_distance_mm_[dir];
             // ** this could be changed to add in the reduced Reachability length into the cost 
             // !! Debugging test the cost of 2d search
-            int cost = (0.8 *(maximumStepReachability_ - searchPredState->getReachability())/maximumStepReachability_ +1) * dxy_distance_mm_[dir];
+            // int cost = (0.8 *(maximumStepReachability_ - searchPredState->getReachability())/maximumStepReachability_ +1) * dxy_distance_mm_[dir];
+            int cost = ((maximumStepReachability_ - searchPredState->getReachability())/maximumStepReachability_ +1) * dxy_distance_mm_[dir];
 
             // * update the cost of the predecessor and add it to the heap
             //update predecessor if necessary
@@ -608,13 +618,13 @@ bool DEPTH2DGridSearch::search_exp(unsigned char** FeasibilityGrid2D, float** De
             if (!withinMap(newx, newy)) continue;
 
             //compute the cost
-            int mapcost = __max( getCost(FeasibilityGrid2D, newx, newy, downsample_), getCost(FeasibilityGrid2D, exp_x, exp_y, downsample_));
+            int mapcost = __max( getCostDownSampled(FeasibilityGrid2D, newx, newy, downsample_), getCostDownSampled(FeasibilityGrid2D, exp_x, exp_y, downsample_));
 
 #if SBPL_2DGRIDSEARCH_NUMOF2DDIRS > 8
             if(dir > 7) {
                 //check two more cells through which the action goes
-                mapcost = __max(mapcost, getCost(FeasibilityGrid2D, exp_x + dx0intersects_[dir], exp_y + dy0intersects_[dir], downsample_));
-                mapcost = __max(mapcost, getCost(FeasibilityGrid2D, exp_x + dx1intersects_[dir], exp_y + dy1intersects_[dir], downsample_));
+                mapcost = __max(mapcost, getCostDownSampled(FeasibilityGrid2D, exp_x + dx0intersects_[dir], exp_y + dy0intersects_[dir], downsample_));
+                mapcost = __max(mapcost, getCostDownSampled(FeasibilityGrid2D, exp_x + dx1intersects_[dir], exp_y + dy1intersects_[dir], downsample_));
             }
 #endif
 
@@ -721,13 +731,13 @@ bool DEPTH2DGridSearch::search_withbuckets(unsigned char** FeasibilityGrid2D, fl
             if (!withinMap(newx, newy)) continue;
 
             //compute the cost
-            int mapcost = __max( getCost(FeasibilityGrid2D, newx, newy, downsample_), getCost(FeasibilityGrid2D, exp_x, exp_y, downsample_));
+            int mapcost = __max( getCostDownSampled(FeasibilityGrid2D, newx, newy, downsample_), getCostDownSampled(FeasibilityGrid2D, exp_x, exp_y, downsample_));
 
 #if SBPL_2DGRIDSEARCH_NUMOF2DDIRS > 8
             if(dir > 7) {
                 //check two more cells through which the action goes
-                mapcost = __max(mapcost, getCost(FeasibilityGrid2D, exp_x + dx0intersects_[dir], exp_y + dy0intersects_[dir], downsample_));
-                mapcost = __max(mapcost, getCost(FeasibilityGrid2D, exp_x + dx1intersects_[dir], exp_y + dy1intersects_[dir], downsample_));
+                mapcost = __max(mapcost, getCostDownSampled(FeasibilityGrid2D, exp_x + dx0intersects_[dir], exp_y + dy0intersects_[dir], downsample_));
+                mapcost = __max(mapcost, getCostDownSampled(FeasibilityGrid2D, exp_x + dx1intersects_[dir], exp_y + dy1intersects_[dir], downsample_));
             }
 #endif
 
@@ -888,7 +898,7 @@ bool DEPTH2DGridSearch::search_withslidingbuckets(unsigned char** FeasibilityGri
         numofExpands++;
 
         //iterate over successors
-        int expcost = getCost(FeasibilityGrid2D, exp_x, exp_y, downsample_);
+        int expcost = getCostDownSampled(FeasibilityGrid2D, exp_x, exp_y, downsample_);
         for (int dir = 0; dir < SBPL_2DGRIDSEARCH_NUMOF2DDIRS; dir++) {
             int newx = exp_x + dx_[dir];
             int newy = exp_y + dy_[dir];
@@ -899,13 +909,13 @@ bool DEPTH2DGridSearch::search_withslidingbuckets(unsigned char** FeasibilityGri
             if (pbClosed[newx + width_ * newy] == 1) continue;
 
             //compute the cost
-            int mapcost = __max( getCost(FeasibilityGrid2D, newx, newy, downsample_), expcost);
+            int mapcost = __max( getCostDownSampled(FeasibilityGrid2D, newx, newy, downsample_), expcost);
 
 #if SBPL_2DGRIDSEARCH_NUMOF2DDIRS > 8
             if(dir > 7) {
                 //check two more cells through which the action goes
-                mapcost = __max(mapcost, getCost(FeasibilityGrid2D, exp_x + dx0intersects_[dir], exp_y + dy0intersects_[dir], downsample_));
-                mapcost = __max(mapcost, getCost(FeasibilityGrid2D, exp_x + dx1intersects_[dir], exp_y + dy1intersects_[dir], downsample_));
+                mapcost = __max(mapcost, getCostDownSampled(FeasibilityGrid2D, exp_x + dx0intersects_[dir], exp_y + dy0intersects_[dir], downsample_));
+                mapcost = __max(mapcost, getCostDownSampled(FeasibilityGrid2D, exp_x + dx1intersects_[dir], exp_y + dy1intersects_[dir], downsample_));
             }
 #endif
 

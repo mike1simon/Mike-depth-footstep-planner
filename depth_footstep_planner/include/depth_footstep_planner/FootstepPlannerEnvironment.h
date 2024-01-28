@@ -32,6 +32,7 @@ struct environment_params
   double max_inverse_footstep_x, max_inverse_footstep_y,
          max_inverse_footstep_theta;
   double step_cost;
+  int gridsearch_downsampling;
 //  int    collision_check_accuracy;
   int    collision_check_method;
   int    hash_table_size;
@@ -92,6 +93,7 @@ public:
    * @param max_inverse_footstep_theta The minimal rotation performable by
    * the robot.
    * @param step_cost The costs for each step.
+   * @param gridsearch_downsampling downsampling for GridSearch map.
    * @param collision_check_accuracy Whether to check just the foot's
    * circumcircle (0), the incircle (1) or recursively the circumcircle
    * and the incircle for the whole foot (2) for collision.
@@ -403,7 +405,7 @@ protected:
    * cvMmScale).
    */
   const int ivStepCost;
-
+  const int ivGridsearch_downsampling;
   /**
    * @brief Whether to check just the foot's inner circle (0), the hole
    * outer circle (1) or exactly the foot's bounding box (2) for

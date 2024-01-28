@@ -15,6 +15,7 @@ FootstepPlannerEnvironment::FootstepPlannerEnvironment(
   ivpStateHash2State(
     new std::vector<const PlanningState*>[params.hash_table_size]),
   ivFootstepSet(params.footstep_set),
+  ivGridsearch_downsampling(params.gridsearch_downsampling),
   ivHeuristicConstPtr(params.heuristic),
   ivFootsizeX(params.footsize_x),
   ivFootsizeY(params.footsize_y),

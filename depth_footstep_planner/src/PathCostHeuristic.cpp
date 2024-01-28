@@ -21,35 +21,38 @@ PathCostHeuristic::PathCostHeuristic(double cell_size,
                                      double step_cost,
                                      double diff_angle_cost,
                                      double max_step_width,
-                                     double inflation_radius)
+                                     int Gridsearch_downsampling,
+                                     double maxStepElevation)
 : Heuristic(cell_size, num_angle_bins, PATH_COST),
   ivpGrid(NULL),
   ivStepCost(step_cost),
   ivDiffAngleCost(diff_angle_cost),
   ivDiffDepthCost(0.0),
   ivMaxStepWidth(max_step_width),
+  ivMaxStepElevation(maxStepElevation),
   ivDistanceCost(1.0),
-  ivInflationRadius(inflation_radius),
+  ivGridsearch_downsampling(Gridsearch_downsampling),
   ivGoalX(-1),
   ivGoalY(-1)
 {}
 PathCostHeuristic::PathCostHeuristic(double cell_size, int num_angle_bins,
                   double step_cost, double diff_angle_cost,double diff_depth_cost,
-                  double max_step_width, double inflation_radius)
+                  double max_step_width, int Gridsearch_downsampling, double maxStepElevation)
   : Heuristic(cell_size, num_angle_bins, PATH_COST),
     ivpGrid(NULL),
     ivStepCost(step_cost),
     ivDiffAngleCost(diff_angle_cost),
     ivDiffDepthCost(diff_depth_cost),
     ivMaxStepWidth(max_step_width),
+    ivMaxStepElevation(maxStepElevation),
     ivDistanceCost(1.0),
-    ivInflationRadius(inflation_radius),
+    ivGridsearch_downsampling(Gridsearch_downsampling),
     ivGoalX(-1),
     ivGoalY(-1)
   {}
 PathCostHeuristic::PathCostHeuristic(double cell_size, int num_angle_bins,
                   double step_cost, double diff_angle_cost,double diff_depth_cost,double dist_cost,
-                  double max_step_width, double inflation_radius)
+                  double max_step_width, int Gridsearch_downsampling, double maxStepElevation)
   : Heuristic(cell_size, num_angle_bins, PATH_COST),
     ivpGrid(NULL),
     ivStepCost(step_cost),
@@ -57,7 +60,8 @@ PathCostHeuristic::PathCostHeuristic(double cell_size, int num_angle_bins,
     ivDiffDepthCost(diff_depth_cost),
     ivDistanceCost(dist_cost),
     ivMaxStepWidth(max_step_width),
-    ivInflationRadius(inflation_radius),
+    ivMaxStepElevation(maxStepElevation),
+    ivGridsearch_downsampling(Gridsearch_downsampling),
     ivGoalX(-1),
     ivGoalY(-1)
   {}
@@ -98,8 +102,10 @@ const
  *  ?  3. Change the hard coded 0.8 to a parameter.
  * **/
   // ! Debugging calculating the distance 
-  double dist = 0.8*double(ivGridSearchPtr->getlowerboundoncostfromstart_inmm(
-      from_x/2, from_y/2)) / 1000.0;
+  // double dist = 0.8*double(ivGridSearchPtr->getlowerboundoncostfromstart_inmm(
+  //     from_x, from_y)) / 1000.0;
+  double dist = double(ivGridSearchPtr->getlowerboundoncostfromstart_inmm(
+      from_x, from_y)) / 1000.0;
   //  * Other ways to calculated the distance instead of using GridSearch 
   //  * but (it Will get Stuck in local Minima)
   //  double dist = euclidean_distance(int(from_x),int(from_y),int(to_x),int(to_y));
@@ -121,7 +127,7 @@ const
   if(ivDiffDepthCost > 0.0){
     diff_depth = fabs(current.getDepth() - to.getDepth());
   }
-  return (ivDistanceCost*dist + expected_steps * ivStepCost +
+  return (ivDistanceCost * dist + expected_steps * ivStepCost +
       diff_angle * ivDiffAngleCost + diff_depth * ivDiffDepthCost);
   // ! OLD 
   //  return (dist + expected_steps * ivStepCost + diff_angle * ivDiffAngleCost);
@@ -148,27 +154,30 @@ PathCostHeuristic::calculateDistances(const PlanningState& from,
   bool success_to = ivMapPtr->worldToMap(to_x_double,to_y_double,
                                to_x, to_y);
   ros::Time start = ros::Time::now();
+
   if ((int)to_x != ivGoalX || (int)to_y != ivGoalY)
   {
     ivGoalX = to_x;
     ivGoalY = to_y;
     unsigned int max_hight;
     ivGridSearchPtr->search(ivpGrid,ivpDepth2D, cvObstacleThreshold,
-                            ivGoalX/2, ivGoalY/2, from_x/2, from_y/2,
-                            max_hight, sbpl_edit::SBPL_2DGRIDSEARCH_TERM_CONDITION_ALLCELLS);
+                            ivGoalX, ivGoalY,
+                            from_x, from_y,
+                            ivMaxStepElevation, sbpl_edit::SBPL_2DGRIDSEARCH_TERM_CONDITION_ALLCELLS);
   }
   double d = (ros::Time::now() - start).toSec();
   ROS_INFO("Depth2DGridSearch Done in: %3.4lf seconds",d);
   // ! GRID2DSEARCH Publish
-  int width = static_cast<int>(ivMapPtr->getInfo().width/2);
-  int height = static_cast<int>(ivMapPtr->getInfo().height/2);
+  int width = static_cast<int>(ivMapPtr->getInfo().width/ivGridsearch_downsampling);
+  int height = static_cast<int>(ivMapPtr->getInfo().height/ivGridsearch_downsampling);
   double maximum = -1000;
   double minimum = 100000000;
   double max_cost = -1000000.0;
   cv::Mat distances = cv::Mat::zeros(width,height,CV_32F);
   for (int i=0;i<width;i++) {
     for(int j=0;j<height;j++){
-      double dist = double(ivGridSearchPtr->getlowerboundoncostfromstart_inmm(i, j)) / 1000.0;
+      double dist = double(ivGridSearchPtr->getlowerboundoncostfromstart_inmm(
+        ivGridsearch_downsampling*i, ivGridsearch_downsampling*j)) / 1000.0;
 
       if(dist < 1000000.0)
         distances.at<float>(i,j) = dist;
@@ -221,14 +230,17 @@ PathCostHeuristic::updateMap(depthmap2d::DepthMap2DPtr map)
   ivGoalX = ivGoalY = -1;
 
   // TESTING GRIDSEARCH
-  unsigned width = ivMapPtr->getInfo().width/2;
-  unsigned height = ivMapPtr->getInfo().height/2;
+  unsigned width = ivMapPtr->getInfo().width;
+  unsigned height = ivMapPtr->getInfo().height;
 
   if (ivGridSearchPtr)
     ivGridSearchPtr->destroy();
 
   ivGridSearchPtr.reset(new sbpl_edit::DEPTH2DGridSearch(width, height,
-                                             ivMapPtr->getResolution(), 4.0/65536.0) );
+                                             ivMapPtr->getResolution(), 4.0/65536.0,
+                                              ivGridsearch_downsampling, ivMaxStepElevation) );
+  width = ivMapPtr->getInfo().width/ivGridsearch_downsampling;
+  height = ivMapPtr->getInfo().height/ivGridsearch_downsampling;
   ivpDepth2D = new float* [width];
 
   for (unsigned x = 0; x < width; ++x){
@@ -238,7 +250,7 @@ PathCostHeuristic::updateMap(depthmap2d::DepthMap2DPtr map)
   {
     for (unsigned x = 0; x < width; ++x)
     {
-      ivpDepth2D[x][y] = ivMapPtr->depthMapAtCell(x*2,y*2);
+      ivpDepth2D[x][y] = ivMapPtr->depthMapAtCell(x*ivGridsearch_downsampling,y*ivGridsearch_downsampling);
     }
   }
 
@@ -273,13 +285,17 @@ void PathCostHeuristic::updateModelOutput(const sensor_msgs::Image::ConstPtr& mo
     ivGridSearchPtr->destroy();
 
   ivGridSearchPtr.reset(new sbpl_edit::DEPTH2DGridSearch(width, height,
-                                             ivMapPtr->getResolution(), 4.0/65536.0 ) );
+                                             ivMapPtr->getResolution(), 4.0/65536.0,
+                                            ivGridsearch_downsampling, ivMaxStepElevation) );
 
   // ? Beginning To Fill the Grid Search Array from the Neural Network Output
   cv::Mat output = cv_ptr->image;
   ROS_INFO("Depth Footstep Planning Node Got Feasible Footsteps For the Map (Model Output). \n");
 
   // ? Initializing Gird array from Model Output for GridSearch
+  width = ivMapPtr->getInfo().width/ivGridsearch_downsampling;
+  height = ivMapPtr->getInfo().height/ivGridsearch_downsampling;
+
   ivpGrid = new unsigned char* [width];
   for (unsigned x = 0; x < width; ++x){
     ivpGrid[x] = new unsigned char [height];
@@ -288,10 +304,12 @@ void PathCostHeuristic::updateModelOutput(const sensor_msgs::Image::ConstPtr& mo
   {
     for (unsigned x = 0; x < width; ++x)
     {
-      // int output_state = static_cast<int>(output.at<unsigned short>(x,y));
-      //  int output_state = static_cast<int>(output.at<unsigned short>(x,y));
-      // the new flip of x and y for the search to axis the dimentions as [x, y]
-      int output_state = static_cast<int>(output.at<unsigned short>(y, x));
+      int i = y*ivGridsearch_downsampling, j = x*ivGridsearch_downsampling;
+      int output_state = static_cast<int>(output.at<unsigned short>(i, j));
+        for(int di=0; di<ivGridsearch_downsampling; di++)
+            for(int dj=0; dj<ivGridsearch_downsampling; dj++)
+                output_state = output_state >  static_cast<int>(output.at<unsigned short>(i+di, j+dj))?
+                 static_cast<int>(output.at<unsigned short>(i+di, j+dj)): output_state;
       if (output_state < 0)
         ROS_ERROR("output_state of Model Output of map at %d %d is: %d out of bounds", x, y,output_state);
       else if (output_state <= 100)
@@ -308,7 +326,7 @@ void PathCostHeuristic::updateModelOutput(const sensor_msgs::Image::ConstPtr& mo
 void
 PathCostHeuristic::resetGrid()
 {
-  int width = ivMapPtr->getInfo().width/2;
+  int width = ivMapPtr->getInfo().width/ivGridsearch_downsampling;
   for (int x = 0; x < width; ++x)
   {
     if (ivpGrid[x])

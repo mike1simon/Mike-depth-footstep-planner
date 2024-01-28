@@ -32,13 +32,13 @@ class PathCostHeuristic : public Heuristic
 public:
   PathCostHeuristic(double cell_size, int num_angle_bins,
                     double step_cost, double diff_angle_cost,
-                    double max_step_width, double inflation_radius);
+                    double max_step_width, int Gridsearch_downsampling, double maxStepElevation=0.1);
   PathCostHeuristic(double cell_size, int num_angle_bins,
                     double step_cost, double diff_angle_cost,double diff_depth_cost,
-                    double max_step_width, double inflation_radius);
+                    double max_step_width, int Gridsearch_downsampling, double maxStepElevation=0.1);
   PathCostHeuristic(double cell_size, int num_angle_bins,
                     double step_cost, double diff_angle_cost,double diff_depth_cost,double dist_cost,
-                    double max_step_width, double inflation_radius);
+                    double max_step_width, int Gridsearch_downsampling, double maxStepElevation=0.1);
   virtual ~PathCostHeuristic();
 
   /**
@@ -71,8 +71,9 @@ private:
   double ivDiffAngleCost;
   double ivDiffDepthCost;
   double ivMaxStepWidth;
+  double ivMaxStepElevation;
   double ivDistanceCost;
-  double ivInflationRadius;
+  int ivGridsearch_downsampling;
 
   int ivGoalX;
   int ivGoalY;

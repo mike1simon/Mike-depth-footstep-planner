@@ -3,7 +3,7 @@
 import os
 import numpy as np
 import rospy
-
+import cv2
 import torch
 import torch.nn as nn
 import torch.nn.functional as F
@@ -150,7 +150,7 @@ class Map_Seg_Server:
         self.criterion = nn.BCELoss()
 
         self.load_model()
-
+        self.image_resolution = 0.005
         self.output_pub = rospy.Publisher(output_pub_name, Image,
                                           queue_size=10, latch=True)
         self.vis_pub = rospy.Publisher(vis_pub_name, OccupancyGrid,
@@ -175,7 +175,7 @@ class Map_Seg_Server:
         grid.info = info or MapMetaData()
         grid.info.height = arr.shape[0]
         grid.info.width = arr.shape[1]
-        grid.info.resolution = 0.01
+        grid.info.resolution = self.image_resolution
         grid.header = Header()
         grid.header.frame_id = "map"
         grid.header.seq = 1
@@ -188,21 +188,37 @@ class Map_Seg_Server:
         output_msg = bridge.cv2_to_imgmsg(output, encoding="8UC1")
         return output_msg
 
-    def scale_image(self, image: np.ndarray):
-        # grab the image dimensions
-        h = image.shape[0]
-        w = image.shape[1]
-        new_image: np.ndarray = np.zeros((int(image.shape[0]/2),
-                                          int(image.shape[1]/2)), image.dtype)
-        # loop over the image, pixel by pixel
-        for y in range(0, h, 2):
-            for x in range(0, w, 2):
-                # threshold the pixel
-                # new_image[int(y/2), int(x/2)] = image[y, x,0]
-                new_image[int(y/2), int(x/2)] = image[y, x]
-        # return the thresholded image
-        return new_image
+    # def scale_image(self, image: np.ndarray):
+    #     # grab the image dimensions
+    #     h = image.shape[0]
+    #     w = image.shape[1]
+    #     new_image: np.ndarray = np.zeros((int(image.shape[0]/2),
+    #                                       int(image.shape[1]/2)), image.dtype)
+    #     # loop over the image, pixel by pixel
+    #     for y in range(0, h, 2):
+    #         for x in range(0, w, 2):
+    #             # threshold the pixel
+    #             # new_image[int(y/2), int(x/2)] = image[y, x,0]
+    #             new_image[int(y/2), int(x/2)] = image[y, x]
+    #     # return the thresholded image
+    #     return new_image
 
+    def scale_image(self, image: np.ndarray, original_resolution, target_resolution=0.010):
+        """
+        Scale the image to a specified resolution.
+        """
+        scaling_factor = original_resolution / target_resolution
+        new_size = (int(image.shape[1] * scaling_factor), int(image.shape[0] * scaling_factor))
+        scaled_image = cv2.resize(image, new_size, interpolation=cv2.INTER_NEAREST)
+        return scaled_image
+
+    def rescale_image(self, image: np.ndarray, original_size):
+        """
+        Rescale the image back to its original size.
+        """
+        rescaled_image = cv2.resize(image, (original_size[1], original_size[0]), interpolation=cv2.INTER_NEAREST)
+        return rescaled_image
+    
     def load_model(self, model_name=None, root_path=None, device=None,
                    criterion=None):
         if root_path is not None:
@@ -250,7 +266,9 @@ class Map_Seg_Server:
         bridge = CvBridge()
         original_image = bridge.imgmsg_to_cv2(msg, msg.encoding)
         # print("recieved input size: ",original_image.shape)
-        input_image = self.scale_image(original_image)
+        input_image = self.scale_image(original_image, self.image_resolution)
+
+        # input_image = self.scale_image(original_image)
         input = torch.from_numpy(input_image.astype(np.float32))
         # Pad the tensor if necessary
         # Ensure the tensor is in the shape [C, H, W]
@@ -277,12 +295,21 @@ class Map_Seg_Server:
             model_output: Tensor = self.model(input)
         output_thresholded = np.round(model_output.numpy()[0, 0], 0)
         output_thresholded = self.remove_padding(output_thresholded, padding)
+        
         return output_thresholded
 
     def Map_Seg_cb(self, msg: Image):
         rospy.loginfo("Feasible Footsteps Segmentation Node\
             Recieved Map (Request).")
+        try:
+            meta_data: MapMetaData = rospy.wait_for_message("/map_metadata", MapMetaData, 2.0)
+            self.image_resolution = meta_data.resolution
+        except rospy.ROSException as e:
+            print(e)
+            self.image_resolution = 0.005  # Default resolution
+        original_size = (msg.height, msg.width)
         self.output: np.ndarray = self.run_model(msg)
+        self.output = self.rescale_image(self.output, original_size)
         self.output_vis: np.ndarray = (50 * self.output).astype("int8")
         self.vis_msg = self.numpy_to_occupancy_grid(self.output_vis)
         self.vis_pub.publish(self.vis_msg)

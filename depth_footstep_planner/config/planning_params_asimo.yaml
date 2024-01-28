@@ -2,20 +2,22 @@
 
 # cost to perform one footstep (in addition to distance costs, corresponds to 'meters')
 step_cost: 0.1
-dist_cost: 1.0
+dist_cost: 0.9
 
 # cost to estimate the difference between the current orientation and the goal
 # orientation; used in the heuristic it can easily overestimate the true path
 # cost since this cost is not incorporated in each step
-diff_angle_cost: -1.0
-diff_depth_cost: 0.0
-
+diff_angle_cost: 0.1
+diff_depth_cost: 0.1
+gridsearch_downsampling: 6
+max_step_elevation: 0.1
 accuracy:
-  # footstep collision check accuracy
-  # - 0 (just the circumcircle of the foot)
-  # - 1 (just the incircle of the foot)
-  # - 2 (circumcircle and incircle recursivly checked for the whole foot)
-  #collision_check: 2
+  # # depricated
+  # # footstep collision check accuracy
+  # # - 0 (just the circumcircle of the foot)
+  # # - 1 (just the incircle of the foot)
+  # # - 2 (circumcircle and incircle recursivly checked for the whole foot)
+  # # collision_check: 2
   #collision_check: 0 realtime analysis of footstep 
   #collision_check: 3 using UNET neural network
   collision_check: 3

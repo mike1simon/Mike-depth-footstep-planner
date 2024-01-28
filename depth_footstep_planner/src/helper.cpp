@@ -67,7 +67,8 @@ bool check_validity_model_output(int x, int y, cv::Mat DepthMap,
   int sampled_x = static_cast<int>(x/2), sampled_y = static_cast<int>(y/2);
   // std::cout<<"3 setup new_depth check_validity_model_output"<<std::endl;
 
-  return static_cast<bool>(map_step_validity->at<uint8_t>(sampled_x,sampled_y));
+  // return static_cast<bool>(map_step_validity->at<uint8_t>(sampled_x,sampled_y));
+  return static_cast<bool>(map_step_validity->at<uint8_t>(x, y));
 }
 bool collision_check(int x, int y, int theta, double& new_depth,
                      int foot_height, int foot_width, int method,
@@ -82,9 +83,6 @@ bool collision_check(int x, int y, int theta, double& new_depth,
   }else if(method == 3){ // ? Use Segmentation Neural Network Output
     bool valid = check_validity_model_output(x, y, depth_map.depthMap(),
                             map_step_validity, new_depth);
-    // ROS_WARN("Entered check_validity_model_output and result is: %d and depth is: %3.3lf",
-    //  static_cast<int>(valid), new_depth);
-  // std::cout<<"4 exit check_validity_model_output"<<std::endl;
     return !valid;
   }else if(method == 10){
     new_depth = get_depth(x,y,depth_map.depthMap());

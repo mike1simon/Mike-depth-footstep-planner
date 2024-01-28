@@ -58,10 +58,11 @@ FootstepPlanner::FootstepPlanner()
                    ivEnvironmentParams.num_angle_bins,
                    64);
   nh_private.param("step_cost", ivEnvironmentParams.step_cost, 0.05);
+  nh_private.param("gridsearch_downsampling", ivEnvironmentParams.gridsearch_downsampling, 2);
   nh_private.param("diff_angle_cost", diff_angle_cost, 0.0);
   nh_private.param("diff_depth_cost", diff_depth_cost, 0.0);
   nh_private.param("dist_cost", dist_cost, 1.0);
-  nh_private.param("Max_Attitude_For_Step", ivEnvironmentParams.MaxAttitudeForStep, 0.175);
+  nh_private.param("max_step_elevation", ivEnvironmentParams.MaxAttitudeForStep, 0.175);
 
   nh_private.param("planner_type", ivPlannerType, std::string("ARAPlanner"));
   nh_private.param("search_until_first_solution", ivSearchUntilFirstSolution,
@@ -202,14 +203,6 @@ FootstepPlanner::FootstepPlanner()
   }
   else if (heuristic_type == "PathCostHeuristic")
   {
-    // for heuristic inflation
-    double foot_incircle =
-      std::min((ivEnvironmentParams.footsize_x / 2.0 -
-                std::abs(ivEnvironmentParams.foot_origin_shift_x)),
-               (ivEnvironmentParams.footsize_y / 2.0 -
-                std::abs(ivEnvironmentParams.foot_origin_shift_y)));
-    assert(foot_incircle > 0.0);
-
     h.reset(
         new PathCostHeuristic(ivEnvironmentParams.cell_size,
                               ivEnvironmentParams.num_angle_bins,
@@ -218,7 +211,8 @@ FootstepPlanner::FootstepPlanner()
                               diff_depth_cost,
                               dist_cost,
                               max_step_width,
-                              foot_incircle));
+                              ivEnvironmentParams.gridsearch_downsampling,
+                              ivEnvironmentParams.MaxAttitudeForStep));
     ROS_INFO("FootstepPlanner heuristic: 2D path euclidean distance with step "
              "costs");
 
