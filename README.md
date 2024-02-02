@@ -1,20 +1,23 @@
 # Footstep Planning for Humanoid Robots Using Perception-based Feasible Footsteps in Cluttered Environments
+![Rviz-depth-footstep-planning.gif](./depth_footstep_search.gif)
 ## By Mike Simon
 
 This repository contains the source code and documentation for my Master's thesis submitted in fulfillment of the requirements for the Master’s Degree in Control and Robotics, Specialty Robotics. The research focuses on developing an enhanced footstep planning algorithm for humanoid robots navigating cluttered environments, leveraging neural networks to pre-analyze the terrain and improve the efficiency of the ARA* algorithm's search expansion.
 ## Abstract
 
 This work introduces an improvement to the footstep planning algorithm by utilizing neural networks for a preliminary analysis of the environment, thereby accelerating the search expansion process of the ARA* algorithm. The methodology encompasses several stages, starting from analyzing the terrain map with deep learning and neural networks based on a modified U-Net architecture. This is followed by a 2D expansion algorithm that propagates through the terrain map, serving as a heuristic cost function for the footstep planning process. A significant contribution of this research is the adaptation of an existing software package to map the planned footsteps from a 2D environment to a 3D one using the Robot Operating System (ROS). The findings of this study offer a foundational step towards further advancements in path planning algorithms and environmental modeling for humanoid robots.
+
+![Master-Thesis.png](./Thesis.png)
+
 ## Keywords:
 
 Path Planning, Footstep Planning, Deep Learning, Environment Analysis, Humanoid Robots, Robotic Operating System (ROS), FCN
 
-![Master-Thesis.png](https://drive.google.com/file/d/1XLq3c8FR64haqlY-Byzs0gAsIsqwL0Tj/view?usp=sharing)
 
 ### Master Thesis:
 you can download the Thesis (in Arabic) from the Higher Institute for Applied Sciences and Technology [website](https://hiast.edu.sy/en/Master-PhD-Theses) or [here PDF](https://hiast.edu.sy/sites/default/files/MasterPHD/62c2e34f9ad01.pdf)
 
-### 
+
 ### Dependencies
 
 This project relies on various ROS packages and external libraries to function properly. Below is a list of dependencies required to build and run the `depth_footstep_planner` package:
@@ -69,13 +72,13 @@ git clone https://github.com/mike1simon/Mike-depth-footstep-planner.git
 # Navigate to the repository
 cd Mike-depth-footstep-planner
 
-# Setup ROS environment (assuming ROS Noetic)
+# Setup ROS environment (prefered ROS Noetic)
 source /opt/ros/noetic/setup.bash
 
-# Install required ROS packages and dependencies
+# Install required ROS packages and dependencies (also follow previous steps)
 rosdep install --from-paths src --ignore-src -r -y
 
-# Build the packages
+# Build the packages (might gives error on the first try due to building msgs (I still have to seperate the custom messages in a different package))
 catkin_make
 ```
 
@@ -93,9 +96,9 @@ roslaunch roslaunch footstep_planner footstep_planner_complete.launch
 
 ### License
 
-This project is licensed under the MIT License - see the [LICENSE.md](LICENSE.md) file for details.
+This project is licensed under the *** I don't know yet *** License - see the [LICENSE.md](LICENSE.md) file for details.
 
 ### Acknowledgments
 This work is built on the existing ros humanoid stack packages, more details about that including the reference papers exist [ros footstep_planner](http://wiki.ros.org/footstep_planner)
 
-I would like to express my gratitude to my supervisors and the robotics department for their guidance and support throughout this research.
+I would like to express my gratitude to my supervisors (PhD. Michel Alsaba & PhD. Iyad Hatem) and the robotics department for their guidance and support throughout this research.
