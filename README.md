@@ -9,6 +9,8 @@ This work introduces an improvement to the footstep planning algorithm by utiliz
 
 Path Planning, Footstep Planning, Deep Learning, Environment Analysis, Humanoid Robots, Robotic Operating System (ROS), FCN
 
+![Master-Thesis.png](https://drive.google.com/file/d/1XLq3c8FR64haqlY-Byzs0gAsIsqwL0Tj/view?usp=sharing)
+
 ### Master Thesis:
 you can download the Thesis (in Arabic) from the Higher Institute for Applied Sciences and Technology [website](https://hiast.edu.sy/en/Master-PhD-Theses) or [here PDF](https://hiast.edu.sy/sites/default/files/MasterPHD/62c2e34f9ad01.pdf)
 
