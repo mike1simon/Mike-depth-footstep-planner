@@ -15,7 +15,7 @@ Path Planning, Footstep Planning, Deep Learning, Environment Analysis, Humanoid 
 
 
 ### Master Thesis:
-you can download the Thesis (in Arabic) from the Higher Institute for Applied Sciences and Technology [website](https://hiast.edu.sy/en/Master-PhD-Theses) or [here PDF](https://hiast.edu.sy/sites/default/files/MasterPHD/62c2e34f9ad01.pdf)
+you can download the Thesis (in Arabic) from the Higher Institute for Applied Sciences and Technology [website](https://hiast.edu.sy/en/Master-PhD-Theses) or [here (PDF)](https://hiast.edu.sy/sites/default/files/MasterPHD/62c2e34f9ad01.pdf)
 
 
 ### Dependencies
@@ -66,7 +66,7 @@ OpenCV is typically included in ROS desktop-full installations. If not, it can b
 Instructions for setting up the environment and installing dependencies:
 
 ```bash
-# Clone the repository
+# Clone this repository
 git clone https://github.com/mike1simon/Mike-depth-footstep-planner.git
 
 # Navigate to the repository
@@ -78,7 +78,7 @@ source /opt/ros/noetic/setup.bash
 # Install required ROS packages and dependencies (also follow previous steps)
 rosdep install --from-paths src --ignore-src -r -y
 
-# Build the packages (might gives error on the first try due to building msgs (I still have to seperate the custom messages in a different package))
+# Build the packages (might gives error on the first try due to building msgs (WIP: seperate the custom messages in a different package))
 catkin_make
 ```
 
@@ -91,7 +91,7 @@ To run the footstep planner with a sample environment:
 source devel/setup.bash
 
 # Launch the simulation environment
-roslaunch roslaunch footstep_planner footstep_planner_complete.launch
+roslaunch footstep_planner footstep_planner_complete.launch
 ```
 
 ### License
@@ -99,6 +99,6 @@ roslaunch roslaunch footstep_planner footstep_planner_complete.launch
 This project is licensed under the *** I don't know yet *** License - see the [LICENSE.md](LICENSE.md) file for details.
 
 ### Acknowledgments
-This work is built on the existing ros humanoid stack packages, more details about that including the reference papers exist [ros footstep_planner](http://wiki.ros.org/footstep_planner)
+This work is built on the existing ROS humanoid stack packages. More details about that including the reference papers here: [ros footstep_planner](http://wiki.ros.org/footstep_planner)
 
 I would like to express my gratitude to my supervisors (PhD. Michel Alsaba & PhD. Iyad Hatem) and the robotics department for their guidance and support throughout this research.
