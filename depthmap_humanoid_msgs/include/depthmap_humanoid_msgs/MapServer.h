@@ -49,16 +49,10 @@ public:
 
   cv::Mat loadMapFromYamlFile(const std::string& fname, double res , nav_msgs::MapMetaData& info);
   nav_msgs::OccupancyGrid turnMaptoOccupancyGrid(cv::Mat IMG, nav_msgs::MapMetaData info);
-  // depthmap_humanoid_msgs::GreyScaleMap16bit turnMaptoGreyScaleMap16bit(cv::Mat IMG, nav_msgs::MapMetaData info);
   sensor_msgs::ImagePtr turnMaptoGreyScaleMap16bit(cv::Mat IMG, nav_msgs::MapMetaData info);
   depthmap_humanoid_msgs::DepthMap turnMaptoDepthMap(cv::Mat IMG, nav_msgs::MapMetaData info);
-  // sensor_msgs::ImagePtr turnMaptoDepthMap(cv::Mat IMG, nav_msgs::MapMetaData info);
   PointCloud::Ptr turnMaptoPointCloud(cv::Mat IMG,nav_msgs::MapMetaData info);
 
-  // inline depthmap_humanoid_msgs::DepthMapConstPtr getDepthMap(){
-  // depthmap_humanoid_msgs::DepthMapConstPtr p(new depthmap_humanoid_msgs::DepthMap(depthmap));
-  //   return p;
-  // }
 private:
   ros::NodeHandle nh;
   ros::Publisher metaData_pub;

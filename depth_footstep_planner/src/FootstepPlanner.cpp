@@ -45,14 +45,9 @@ FootstepPlanner::FootstepPlanner()
                    std::string("EuclideanHeuristic"));
   nh_private.param("heuristic_scale", ivEnvironmentParams.heuristic_scale, 1.0);
   nh_private.param("max_hash_size", ivEnvironmentParams.hash_table_size, 65536);
-//  nh_private.param("accuracy/collision_check",
-//                   ivEnvironmentParams.collision_check_accuracy,
-//                   2);
   nh_private.param("accuracy/collision_check",
                    ivEnvironmentParams.collision_check_method,
                    0);
-
-//  nh_private.param("accuracy/cell_size", ivEnvironmentParams.cell_size, 0.01);
   nh_private.param("accuracy/cell_size", ivEnvironmentParams.cell_size, 0.005);
   nh_private.param("accuracy/num_angle_bins",
                    ivEnvironmentParams.num_angle_bins,
@@ -349,10 +344,8 @@ FootstepPlanner::run()
   }
   catch (const SBPL_Exception& e)
   {
-    // ROS_ERROR("SBPL planning failed (%s)", e.what());
     return false;
   }
-//  ROS_ERROR("NUMBER iv debug %d",ivPlannerEnvironmentPtr->getivdebug());
   ivPathCost = double(path_cost) / FootstepPlannerEnvironment::cvMmScale;
 
   bool path_is_new = pathIsNew(solution_state_ids);
@@ -743,18 +736,6 @@ FootstepPlanner::setStart(const geometry_msgs::PoseStampedConstPtr start_pose)
 bool
 FootstepPlanner::setStart(State left_foot, State right_foot)
 {
-//  ivPlannerEnvironmentPtr->occupied(right_foot);
-//  ivPlannerEnvironmentPtr->occupied(left_foot);
-
-//  ROS_ERROR("Start pose left_foot (%f %f %lf %f) is %d.",
-//            left_foot.getX(), left_foot.getY(),
-//            left_foot.getDepth(), left_foot.getTheta(),
-//            ivPlannerEnvironmentPtr->occupied(left_foot));
-//  ROS_ERROR("Start pose right_foot (%f %f %lf %f) is %d.",
-//            right_foot.getX(), right_foot.getY(),
-//            right_foot.getDepth(), right_foot.getTheta(),
-//            ivPlannerEnvironmentPtr->occupied(right_foot));
-
   if (ivPlannerEnvironmentPtr->occupied(left_foot) ||
       ivPlannerEnvironmentPtr->occupied(right_foot))
   {
@@ -1035,7 +1016,6 @@ FootstepPlanner::broadcastExpandedNodesVis()
       point.z = 0.01;
       points.push_back(point);
     }
-//    ROS_ERROR("number of expanded state :%d  %d",i,ivPlannerEnvironmentPtr->getNumExpandedStates());
     cloud_msg.header.stamp = ros::Time::now();
     cloud_msg.header.frame_id = ivMapPtr->getFrameID();
 

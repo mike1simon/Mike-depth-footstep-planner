@@ -11,9 +11,6 @@ DepthMap2D::DepthMap2D()
 DepthMap2D::DepthMap2D(const depthmap_humanoid_msgs::DepthMapConstPtr& depth_map) {
 
   DepthMap2D::setMap(depth_map);
-//    cv::namedWindow("test");
-//    cv::imshow("test",m_depthMap);
-//    cv::waitKey(0);
 
 }
 
@@ -40,7 +37,6 @@ void DepthMap2D::setMap(const depthmap_humanoid_msgs::DepthMapConstPtr& depth_ma
   {
     // copy the sensor_msgs/Image msg with this encoding to the cv_bridge pointer
     // cv_ptr = cv_bridge::toCvCopy(depth_map->map, depth_map->map.encoding);
-    //// not reading correctly fix this ASAP
     cv_ptr = cv_bridge::toCvCopy(depth_map->map, sensor_msgs::image_encodings::TYPE_32FC1);
     temp_map = cv_ptr->image;
     // if it was empty and there was an error (exit)
@@ -97,8 +93,6 @@ void DepthMap2D::setMap(const cv::Mat& depth_map){
 
 
 void DepthMap2D::mapToWorld(unsigned int mx, unsigned int my, double& wx, double& wy) const {
-//  wx = m_mapInfo.origin.position.x + (mx+0.5) * m_mapInfo.resolution;
-//  wy = m_mapInfo.origin.position.y + (my+0.5) * m_mapInfo.resolution;
   double x = (mx+0.5) * static_cast<double>(m_mapInfo.resolution);
   double y = (my+0.5) * static_cast<double>(m_mapInfo.resolution);
   tf::Vector3 P_old(x,y,0);
@@ -115,8 +109,6 @@ void DepthMap2D::mapToWorld(unsigned int mx, unsigned int my, double& wx, double
 }
 
 void DepthMap2D::worldToMapNoBounds(double wx, double wy, int& mx, int& my) const {
-//  mx = (int) ((wx - m_mapInfo.origin.position.x) / m_mapInfo.resolution);
-//  my = (int) ((wy - m_mapInfo.origin.position.y) / m_mapInfo.resolution);
   tf::Quaternion q;
   q.setX(m_mapInfo.origin.orientation.x);
   q.setY(m_mapInfo.origin.orientation.y);

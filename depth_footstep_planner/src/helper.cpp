@@ -43,10 +43,6 @@ bool check_validity_stable_depth(int x, int y, int theta,
       highest_hight = max(highest_hight,v);
       foot_points[v]++;
     }
-//  ROS_ERROR(" validity check in x:%d y:%d theta: %d  is: %d new depth: %f no of points: %d  max allowns: %d radius: %d ",x,y,theta,
-//            (foot_points[highest_hight] > 0.85*(0.85*(2*radius+1)*(2*radius+1)))
-//           ,highest_hight,foot_points[highest_hight],
-//           (int)(0.85*(2*radius+1)*(2*radius+1)),radius);
   return foot_points[highest_hight] > 0.85*(0.85*(2*radius+1)*(2*radius+1));
 }
 double get_depth(int x, int y,cv::Mat Map){
@@ -56,18 +52,8 @@ double get_depth(int x, int y,cv::Mat Map){
 bool check_validity_model_output(int x, int y, cv::Mat DepthMap,
  boost::shared_ptr<cv::Mat> map_step_validity, double &new_depth)
 {
-  // std::cout<<"2 entered check_validity_model_output"<<std::endl;
-  // std::cout<<"2.5 DepthMap [x,y] ["<<x<<","<<y<<"]"<<std::endl;
 
   new_depth = double(DepthMap.at<float>(x,y));
-  // unsigned short validity = static_cast<unsigned short>(map_step_validity->at<char>(x,y));
-  // std::cout<<"x: "<<x<<"  y: "<<y<<"  d: "<<new_depth<<" T: "<<static_cast<bool>(map_step_validity->at<uint8_t>(x,y))<<std::endl;
-  // ! USING X/2 Y/2 Only temperary untill changing them to the same size
-  // ! for now depth is 1000x1000 and grid is 500x500
-  int sampled_x = static_cast<int>(x/2), sampled_y = static_cast<int>(y/2);
-  // std::cout<<"3 setup new_depth check_validity_model_output"<<std::endl;
-
-  // return static_cast<bool>(map_step_validity->at<uint8_t>(sampled_x,sampled_y));
   return static_cast<bool>(map_step_validity->at<uint8_t>(x, y));
 }
 bool collision_check(int x, int y, int theta, double& new_depth,

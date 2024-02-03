@@ -23,6 +23,9 @@ namespace depth_footstep_planner
  *
  *  + The difference between the orientation of the two states multiplied
  *    by some cost factor.
+ * 
+ *  + The difference between the attitude of the two states multiplied
+ *    by some cost factor.
  */
 
 #include <sbpl_edit/Depth2Dgridsearch.h>

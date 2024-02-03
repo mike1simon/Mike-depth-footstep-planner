@@ -1,10 +1,6 @@
 /**
  *  TODO: 
- *    1. reConfigure the Maps and input and output
- *  ! 2. Modefy the GridSearch to get hieght and reachability
- *  ? 3. Modefy the GridSearch to merge hiegth data with reachability data of foot
- *  ? 4. Link the Train UNET model with the planner
- *  * 5. Try to modify the planner to not link two steps between or trough hazarduos area
+ *  * Try to modify the planner to not link two steps between or trough hazarduos area
  * **/
 
 #include <depth_footstep_planner/PathCostHeuristic.h>
@@ -98,12 +94,9 @@ const
 
 /**
  *  TODO: 
- *    1. Make Sure that the dist is calculated optimally
- *  ?  3. Change the hard coded 0.8 to a parameter.
+ *    Make Sure that the dist is calculated optimally
  * **/
-  // ! Debugging calculating the distance 
-  // double dist = 0.8*double(ivGridSearchPtr->getlowerboundoncostfromstart_inmm(
-  //     from_x, from_y)) / 1000.0;
+  // we devide by a 1000 to transform to somehow meters value
   double dist = double(ivGridSearchPtr->getlowerboundoncostfromstart_inmm(
       from_x, from_y)) / 1000.0;
   //  * Other ways to calculated the distance instead of using GridSearch 
@@ -129,8 +122,6 @@ const
   }
   return (ivDistanceCost * dist + expected_steps * ivStepCost +
       diff_angle * ivDiffAngleCost + diff_depth * ivDiffDepthCost);
-  // ! OLD 
-  //  return (dist + expected_steps * ivStepCost + diff_angle * ivDiffAngleCost);
 }
 
 
@@ -167,6 +158,7 @@ PathCostHeuristic::calculateDistances(const PlanningState& from,
   }
   double d = (ros::Time::now() - start).toSec();
   ROS_INFO("Depth2DGridSearch Done in: %3.4lf seconds",d);
+
   // ! GRID2DSEARCH Publish
   int width = static_cast<int>(ivMapPtr->getInfo().width/ivGridsearch_downsampling);
   int height = static_cast<int>(ivMapPtr->getInfo().height/ivGridsearch_downsampling);
@@ -229,7 +221,7 @@ PathCostHeuristic::updateMap(depthmap2d::DepthMap2DPtr map)
 
   ivGoalX = ivGoalY = -1;
 
-  // TESTING GRIDSEARCH
+  // Update depth gridmap to be used by the gridsearch planner (downsampled)
   unsigned width = ivMapPtr->getInfo().width;
   unsigned height = ivMapPtr->getInfo().height;
 
@@ -277,7 +269,6 @@ void PathCostHeuristic::updateModelOutput(const sensor_msgs::Image::ConstPtr& mo
 
   ivGoalX = ivGoalY = -1;
 
-  // TESTING GRIDSEARCH
   unsigned width = model_output->width;
   unsigned height = model_output->height;
 
@@ -288,11 +279,12 @@ void PathCostHeuristic::updateModelOutput(const sensor_msgs::Image::ConstPtr& mo
                                              ivMapPtr->getResolution(), 4.0/65536.0,
                                             ivGridsearch_downsampling, ivMaxStepElevation) );
 
-  // ? Beginning To Fill the Grid Search Array from the Neural Network Output
+  // Beginning To Fill the Grid Search Array from the Neural Network Output
   cv::Mat output = cv_ptr->image;
   ROS_INFO("Depth Footstep Planning Node Got Feasible Footsteps For the Map (Model Output). \n");
 
-  // ? Initializing Gird array from Model Output for GridSearch
+  // Update feasible footsteps gridmap to be used by the gridsearch planner (downsampled)
+  // Initializing Gird array from Model Output for GridSearch
   width = ivMapPtr->getInfo().width/ivGridsearch_downsampling;
   height = ivMapPtr->getInfo().height/ivGridsearch_downsampling;
 

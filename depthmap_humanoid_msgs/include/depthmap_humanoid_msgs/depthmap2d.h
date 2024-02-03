@@ -37,12 +37,6 @@ public:
   /// check if a coordinate is covered by the map extent (same as worldToMap)
   bool inMapBounds(double wx, double wy) const;
 
-/// not to be used
-//  /**
-//   * Inflate occupancy map by inflationRadius
-//   */
-//  void inflateMap(double inflationRaduis);
-
   /// Distance (in m) between two map coordinates (indices)
   inline double worldDist(unsigned x1, unsigned y1, unsigned x2, unsigned y2){
     return DepthMap2D::worldDist(cv::Point(x1, y1), cv::Point(x2, y2));
@@ -61,24 +55,6 @@ public:
   static inline double pointDist2(const cv::Point& p1, const cv::Point& p2){
     return (p1.x - p2.x)*(p1.x - p2.x) + (p1.y - p2.y)*(p1.y - p2.y);
   }
-/* not to be used
-/// not to be used
-//  /// Returns distance (in m) at world coordinates <wx,wy> in m; -1 if out of bounds!
-//  float distanceMapAt(double wx, double wy) const;
-
-//  /// Returns distance (in m) at map cell <mx, my> in m; -1 if out of bounds!
-//  float distanceMapAtCell(unsigned int mx, unsigned int my) const;
-
-//  /// Returns map value at world coordinates <wx, wy>; out of bounds will be returned as 0!
-//  uchar binaryMapAt(double wx, double wy) const;
-
-//  /// Returns map value at map cell <mx, my>; out of bounds will be returned as 0!
-//  uchar binaryMapAtCell(unsigned int mx, unsigned int my) const;
-
-//  /// Returns map value at map cell <mx, my>; out of bounds will be returned as 0!
-//  uchar& binaryMapAtCell(unsigned int mx, unsigned int my);
-/// not to be used
-*/
 
   /// Returns depth (in meter) at world coordinates <wx,wy> in m; -1000 if out of bounds!
   float depthMapAt(double wx, double wy) const;

@@ -111,7 +111,8 @@ private:
   /// The supporting leg.
   Leg	ivLeg;
 
-  /// Value of attitude (depth) in meters (No need to discretize since it wont be used)
+  /// Value of attitude (depth) in meters 
+  /// (No need to discretize since it wont be used in the configuration space)
   double ivDepth;
   /// The (unique) ID of the planning state.
   int ivId;

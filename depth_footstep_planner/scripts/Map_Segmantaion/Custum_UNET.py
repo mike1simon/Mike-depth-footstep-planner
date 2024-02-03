@@ -168,9 +168,6 @@ class Map_Seg_Server:
         if isinstance(arr, np.ma.MaskedArray):
             # We assume that the masked value are already -1, for speed
             arr = arr.data
-        # Flip the y-axis to align with ROS OccupancyGrid format
-        # new edit to flip while reading the map
-        # arr = np.flipud(arr)
         grid.data = arr.ravel()
         grid.info = info or MapMetaData()
         grid.info.height = arr.shape[0]
@@ -188,37 +185,27 @@ class Map_Seg_Server:
         output_msg = bridge.cv2_to_imgmsg(output, encoding="8UC1")
         return output_msg
 
-    # def scale_image(self, image: np.ndarray):
-    #     # grab the image dimensions
-    #     h = image.shape[0]
-    #     w = image.shape[1]
-    #     new_image: np.ndarray = np.zeros((int(image.shape[0]/2),
-    #                                       int(image.shape[1]/2)), image.dtype)
-    #     # loop over the image, pixel by pixel
-    #     for y in range(0, h, 2):
-    #         for x in range(0, w, 2):
-    #             # threshold the pixel
-    #             # new_image[int(y/2), int(x/2)] = image[y, x,0]
-    #             new_image[int(y/2), int(x/2)] = image[y, x]
-    #     # return the thresholded image
-    #     return new_image
-
-    def scale_image(self, image: np.ndarray, original_resolution, target_resolution=0.010):
+    def scale_image(self, image: np.ndarray, original_resolution,
+                    target_resolution=0.010):
         """
         Scale the image to a specified resolution.
         """
         scaling_factor = original_resolution / target_resolution
-        new_size = (int(image.shape[1] * scaling_factor), int(image.shape[0] * scaling_factor))
-        scaled_image = cv2.resize(image, new_size, interpolation=cv2.INTER_NEAREST)
+        new_size = (int(image.shape[1] * scaling_factor),
+                    int(image.shape[0] * scaling_factor))
+        scaled_image = cv2.resize(image, new_size,
+                                  interpolation=cv2.INTER_NEAREST)
         return scaled_image
 
     def rescale_image(self, image: np.ndarray, original_size):
         """
         Rescale the image back to its original size.
         """
-        rescaled_image = cv2.resize(image, (original_size[1], original_size[0]), interpolation=cv2.INTER_NEAREST)
+        rescaled_image = cv2.resize(image,
+                                    (original_size[1], original_size[0]),
+                                    interpolation=cv2.INTER_NEAREST)
         return rescaled_image
-    
+
     def load_model(self, model_name=None, root_path=None, device=None,
                    criterion=None):
         if root_path is not None:
@@ -238,7 +225,6 @@ class Map_Seg_Server:
         rospy.loginfo("Feasible Footsteps Segmentation Node Loaded\
             UNET Model from: %s", self.model_path)
         self.model.load_state_dict(torch.load(self.model_path))
-        # self.model.load_state_dict(self.model_path)
         return self.model
 
     def pad_image_to_divisible_by_8(self, tensor):
@@ -265,10 +251,8 @@ class Map_Seg_Server:
     def run_model(self, msg: Image, model=None):
         bridge = CvBridge()
         original_image = bridge.imgmsg_to_cv2(msg, msg.encoding)
-        # print("recieved input size: ",original_image.shape)
         input_image = self.scale_image(original_image, self.image_resolution)
 
-        # input_image = self.scale_image(original_image)
         input = torch.from_numpy(input_image.astype(np.float32))
         # Pad the tensor if necessary
         # Ensure the tensor is in the shape [C, H, W]
@@ -281,28 +265,24 @@ class Map_Seg_Server:
         # Apply any data transforms if necessary
         input = self.data_transforms(input)
         input = input.to(self.device)
-        # input = input.view(1, input.shape[0], input.shape[1])
-        # input = self.data_transforms(input)
-        # input = input.view(1, input.shape[0], input.shape[1], input.shape[2])
-        # input = input.to(self.device)
-        # output = output.to(device)
 
         if model is not None:
             self.model = model
         self.model.eval()
-        # Forward pass
+        # Forward pass (inference)
         with torch.no_grad():
             model_output: Tensor = self.model(input)
+        # Also we can do it without rounding to get a probabilistic output
         output_thresholded = np.round(model_output.numpy()[0, 0], 0)
         output_thresholded = self.remove_padding(output_thresholded, padding)
-        
         return output_thresholded
 
     def Map_Seg_cb(self, msg: Image):
         rospy.loginfo("Feasible Footsteps Segmentation Node\
             Recieved Map (Request).")
         try:
-            meta_data: MapMetaData = rospy.wait_for_message("/map_metadata", MapMetaData, 2.0)
+            meta_data: MapMetaData = rospy.wait_for_message("/map_metadata",
+                                                            MapMetaData, 2.0)
             self.image_resolution = meta_data.resolution
         except rospy.ROSException as e:
             print(e)

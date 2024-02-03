@@ -78,7 +78,8 @@ source /opt/ros/noetic/setup.bash
 # Install required ROS packages and dependencies (also follow previous steps)
 rosdep install --from-paths src --ignore-src -r -y
 
-# Build the packages (might gives error on the first try due to building msgs (I still have to seperate the custom messages in a different package))
+# Build the packages (might gives error on the first try due to building msgs 
+# (I still have to seperate the custom messages in a different package))
 catkin_make
 ```
 
@@ -91,7 +92,7 @@ To run the footstep planner with a sample environment:
 source devel/setup.bash
 
 # Launch the simulation environment
-roslaunch roslaunch footstep_planner footstep_planner_complete.launch
+roslaunch depth_footstep_planner footstep_planner_complete.launch
 ```
 
 ### License

@@ -101,10 +101,6 @@ add_executable(footstep_planner_node src/footstep_planner.cpp)
 add_dependencies(footstep_planner_node ${catkin_EXPORTED_TARGETS})
 target_link_libraries(footstep_planner_node sbpl_edit ${PROJECT_NAME} ${catkin_LIBRARIES} ${SBPL_LIBRARIES})
 
-add_executable(test1 src/test.cpp)
-add_dependencies(test1 ${catkin_EXPORTED_TARGETS})
-target_link_libraries(test1 sbpl_edit ${catkin_LIBRARIES})
-
 
 ################################################################################
 # Install

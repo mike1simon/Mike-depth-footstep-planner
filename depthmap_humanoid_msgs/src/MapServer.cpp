@@ -16,7 +16,6 @@ MapServer::MapServer(const std::string& fname, double res){
   grayScaleMap16 = turnMaptoGreyScaleMap16bit(mapImg,metaData);
   depthmap = turnMaptoDepthMap(mapImg, metaData);
   pointCloud = turnMaptoPointCloud(mapImg,metaData);
-//  map_8bit_srv = nh.advertiseService("static_map", &MapServer::mapCallback, this);
 
   // Latched publisher for metadata
   metaData_pub= nh.advertise<nav_msgs::MapMetaData>("map_metadata", 1, true);
@@ -42,8 +41,6 @@ cv::Mat MapServer::loadMapFromYamlFile(const std::string& fname, double res, nav
   cv::Mat IMG;
   std::string mapfname = "";
   double origin[3];
-  //mapfname = fname + ".pgm";
-  //std::ifstream fin((fname + ".yaml").c_str());
   std::ifstream fin(fname.c_str());
   if (fin.fail()) {
     ROS_ERROR("Map_server could not open %s.", fname.c_str());
@@ -116,7 +113,6 @@ cv::Mat MapServer::loadMapFromYamlFile(const std::string& fname, double res, nav
   ROS_INFO("Loading map from image \"%s\"", mapfname.c_str());
   try
   {
-//    IMG = cv::imread(mapfname,-1);
 
     IMG = cv::imread(mapfname, cv::IMREAD_ANYDEPTH);
     if(IMG.empty()){
@@ -198,7 +194,6 @@ sensor_msgs::ImagePtr MapServer::turnMaptoGreyScaleMap16bit(cv::Mat IMG, nav_msg
 }
 
 depthmap_humanoid_msgs::DepthMap MapServer::turnMaptoDepthMap(cv::Mat IMG, nav_msgs::MapMetaData info){
-// sensor_msgs::ImagePtr MapServer::turnMaptoDepthMap(cv::Mat IMG, nav_msgs::MapMetaData info){
   std::string frame_id;
   nh.param("frame_id", frame_id, std::string("map"));
   
@@ -228,7 +223,6 @@ PointCloud::Ptr MapServer::turnMaptoPointCloud(cv::Mat IMG,nav_msgs::MapMetaData
   pc->header.frame_id = frame_id;
   pc->height = info.height/static_cast<unsigned int>(skip_pixel_pointcloud_y);
   pc->width = info.width/static_cast<unsigned int>(skip_pixel_pointcloud_x);
-  //pc->resize(info.height*info.width);
 
   for(int i=0; i<static_cast<int>(info.height) ; i=i+skip_pixel_pointcloud_y)
       for(int j=0; j<static_cast<int>(info.width); j=j+skip_pixel_pointcloud_x) {

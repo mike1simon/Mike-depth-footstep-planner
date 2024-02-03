@@ -257,10 +257,6 @@ FootstepPlannerEnvironment::stepCost(const PlanningState& a,
             ivHeuristicConstPtr);
     diffDepthCost = h->getDiffDepthCost();
   }
-//  ROS_ERROR("Step cost between a[x: %d , y: %d] and b[x: %d , y: %d] is dist: %lf ivStepCost: %d all: %d with depth: %d"
-//            ,a.getX(),a.getY(),b.getX(),b.getY(),dist,ivStepCost,
-//            int(cvMmScale * dist) + ivStepCost,
-//            int(int(cvMmScale * dist) + ivStepCost + attitude * diffDepthCost));
 
  return int(int(cvMmScale * dist) + ivStepCost + attitude * diffDepthCost);
 //  return int(cvMmScale * dist) + ivStepCost;
@@ -305,9 +301,7 @@ FootstepPlannerEnvironment::occupied(PlanningState& s)
   double new_depth = s.getDepth();
   boost::shared_ptr<cv::Mat> Model_Output;
 
-  // !! Debugging change the condition to a more suitable location
   if(X < 0 || X >= ivMapPtr->depthMap().rows || Y < 0 || Y >= ivMapPtr->depthMap().cols){
-  // !! Debugging See Exactly why this problem happenning repeatedly
     // ROS_ERROR(" Foot is outside the map :( ");
     return false;
   }
@@ -371,12 +365,6 @@ void FootstepPlannerEnvironment::updateModelOutput(const sensor_msgs::Image::Con
       }
     }
 
-    // ROS_ERROR("ivModelOutputPtr in 0,0 is = %d", ivModelOutputPtr->at<uint8_t>(0,0));
-    // for(int j=10;j<30;j++){
-    //   for(int i=0;i<100;i++)
-    //     std::cout<<static_cast<bool>(ivModelOutputPtr->at<uint8_t>(i,j));
-    //   std::cout<<std::endl;
-    // }
     ivModelOutputPtr = boost::make_shared<cv::Mat>(modelOutputGrid);
 
   }
@@ -552,8 +540,8 @@ FootstepPlannerEnvironment::reachable(const PlanningState& from,
     footstep_theta = -footstep_theta;
   }
 
-  //// check if the attitude translation between the two states is valid
-  /// it depth difference should be less or equal to MaxAttitudeForStep
+  // check if the attitude translation between the two states is valid
+  // depth difference should be less or equal to MaxAttitudeForStep
   if(abs(from.getDepth()-to.getDepth()) > ivMaxAttitudeForStep)
     return false;
 
@@ -612,8 +600,8 @@ FootstepPlannerEnvironment::reachable(const PlanningState& from,
 bool
 FootstepPlannerEnvironment::reachableFromDepth(const PlanningState& from,
                                                const PlanningState& to){
-  //// check if the attitude translation between the two states is valid
-  /// it depth difference should be less or equal to MaxAttitudeForStep
+  // check if the attitude translation between the two states is valid
+  // depth difference should be less or equal to MaxAttitudeForStep
   if(abs(from.getDepth()-to.getDepth()) > ivMaxAttitudeForStep)
     return false;
   return true;
@@ -944,8 +932,6 @@ FootstepPlannerEnvironment::GetSuccsTo(int SourceStateID, int goalStateId,
   const PlanningState* current = ivStateId2State[SourceStateID];
   ivExpandedStates.insert(std::pair<int,int>(current->getX(), current->getY()));
   ++ivNumExpandedStates;
-
-  //ROS_INFO("GetSuccsTo %d -> %d: %f", SourceStateID, goalStateId, euclidean_distance(current->getX(), current->getY(), ivStateId2State[goalStateId]->getX(), ivStateId2State[goalStateId]->getY()));
 
   // add cheap transition from right to left, so right becomes an equivalent goal
   if (goalStateId== ivIdGoalFootLeft && SourceStateID == ivIdGoalFootRight && current->getLeg() == RIGHT){

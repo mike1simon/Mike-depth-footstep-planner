@@ -94,9 +94,9 @@ public:
    * the robot.
    * @param step_cost The costs for each step.
    * @param gridsearch_downsampling downsampling for GridSearch map.
-   * @param collision_check_accuracy Whether to check just the foot's
-   * circumcircle (0), the incircle (1) or recursively the circumcircle
-   * and the incircle for the whole foot (2) for collision.
+   * @param collision_check_accuracy Whether to check for collision of the
+   * foot using (0) realtime analysis of footstep (testing purposes only).
+   * or using a predefined gridmap for feasible footsteps locations (3).
    * @param hash_table_size Size of the hash table storing the planning
    * states expanded during the search.
    * @param cell_size The size of each grid cell used to discretize the
