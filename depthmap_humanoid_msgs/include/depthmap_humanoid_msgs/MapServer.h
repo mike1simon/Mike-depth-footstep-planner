@@ -32,56 +32,55 @@
 
 
 namespace map_server {
-#ifdef HAVE_YAMLCPP_GT_0_5_0
-// The >> operator disappeared in yaml-cpp 0.5, so this function is
-// added to provide support for code written under the yaml-cpp 0.3 API.
-template<typename T>
-void operator >> (const YAML::Node& node, T& i)
-{
-  i = node.as<T>();
-}
-#endif
-typedef pcl::PointCloud<pcl::PointXYZRGB> PointCloud;
-class MapServer
-{
-public:
-  MapServer(const std::string& fname, double res );
+  #ifdef HAVE_YAMLCPP_GT_0_5_0
+    // The >> operator disappeared in yaml-cpp 0.5, so this function is
+    // added to provide support for code written under the yaml-cpp 0.3 API.
+    template<typename T>
+    void operator >> (const YAML::Node& node, T& i)
+    {
+      i = node.as<T>();
+    }
+  #endif
+  typedef pcl::PointCloud<pcl::PointXYZRGB> PointCloud;
+  class MapServer {
+    public:
+      MapServer(const std::string& fname, double res );
 
-  cv::Mat loadMapFromYamlFile(const std::string& fname, double res , nav_msgs::MapMetaData& info);
-  nav_msgs::OccupancyGrid turnMaptoOccupancyGrid(cv::Mat IMG, nav_msgs::MapMetaData info);
-  // depthmap_humanoid_msgs::GreyScaleMap16bit turnMaptoGreyScaleMap16bit(cv::Mat IMG, nav_msgs::MapMetaData info);
-  sensor_msgs::ImagePtr turnMaptoGreyScaleMap16bit(cv::Mat IMG, nav_msgs::MapMetaData info);
-  depthmap_humanoid_msgs::DepthMap turnMaptoDepthMap(cv::Mat IMG, nav_msgs::MapMetaData info);
-  // sensor_msgs::ImagePtr turnMaptoDepthMap(cv::Mat IMG, nav_msgs::MapMetaData info);
-  PointCloud::Ptr turnMaptoPointCloud(cv::Mat IMG,nav_msgs::MapMetaData info);
+      cv::Mat loadMapFromYamlFile(const std::string& fname, double res , nav_msgs::MapMetaData& info);
+      nav_msgs::OccupancyGrid turnMaptoOccupancyGrid(cv::Mat IMG, nav_msgs::MapMetaData info);
+      // depthmap_humanoid_msgs::GreyScaleMap16bit turnMaptoGreyScaleMap16bit(cv::Mat IMG, nav_msgs::MapMetaData info);
+      sensor_msgs::ImagePtr turnMaptoGreyScaleMap16bit(cv::Mat IMG, nav_msgs::MapMetaData info);
+      depthmap_humanoid_msgs::DepthMap turnMaptoDepthMap(cv::Mat IMG, nav_msgs::MapMetaData info);
+      // sensor_msgs::ImagePtr turnMaptoDepthMap(cv::Mat IMG, nav_msgs::MapMetaData info);
+      PointCloud::Ptr turnMaptoPointCloud(cv::Mat IMG,nav_msgs::MapMetaData info);
 
-  // inline depthmap_humanoid_msgs::DepthMapConstPtr getDepthMap(){
-  // depthmap_humanoid_msgs::DepthMapConstPtr p(new depthmap_humanoid_msgs::DepthMap(depthmap));
-  //   return p;
-  // }
-private:
-  ros::NodeHandle nh;
-  ros::Publisher metaData_pub;
-  ros::Publisher map_8bit_pub;
-  ros::Publisher map_16bit_pub;
-  ros::Publisher depthmap_pub;
-  ros::Publisher pointCloud_pub;
-  ros::ServiceServer map_8bit_srv;
-  ros::ServiceServer map_16bit_srv;
-  ros::ServiceServer depthmap_srv;
+      // inline depthmap_humanoid_msgs::DepthMapConstPtr getDepthMap(){
+      // depthmap_humanoid_msgs::DepthMapConstPtr p(new depthmap_humanoid_msgs::DepthMap(depthmap));
+      //   return p;
+      // }
+    private:
+      ros::NodeHandle nh;
+      ros::Publisher metaData_pub;
+      ros::Publisher map_8bit_pub;
+      ros::Publisher map_16bit_pub;
+      ros::Publisher depthmap_pub;
+      ros::Publisher pointCloud_pub;
+      ros::ServiceServer map_8bit_srv;
+      ros::ServiceServer map_16bit_srv;
+      ros::ServiceServer depthmap_srv;
 
-  bool res_from_file;
-  int skip_pixel_pointcloud_x=1,skip_pixel_pointcloud_y=1;
-  double max_attitude=4.0,min_attitude=0.0;
-  nav_msgs::MapMetaData metaData;
-  cv::Mat mapImg;
-  nav_msgs::OccupancyGrid grayScaleMap8;
-  PointCloud::Ptr pointCloud;
-  // depthmap_humanoid_msgs::GreyScaleMap16bit grayScaleMap16;
-  sensor_msgs::ImagePtr grayScaleMap16;
-  depthmap_humanoid_msgs::DepthMap depthmap;
-  // sensor_msgs::ImagePtr depthmap;
+      bool res_from_file;
+      int skip_pixel_pointcloud_x=1,skip_pixel_pointcloud_y=1;
+      double max_attitude=4.0,min_attitude=0.0;
+      nav_msgs::MapMetaData metaData;
+      cv::Mat mapImg;
+      nav_msgs::OccupancyGrid grayScaleMap8;
+      PointCloud::Ptr pointCloud;
+      // depthmap_humanoid_msgs::GreyScaleMap16bit grayScaleMap16;
+      sensor_msgs::ImagePtr grayScaleMap16;
+      depthmap_humanoid_msgs::DepthMap depthmap;
+      // sensor_msgs::ImagePtr depthmap;
   };
 
-  }
+}
 #endif // DEPTHMAP_HUMANOID_MSGS_MAP_SERVER_H
