@@ -97,7 +97,7 @@ roslaunch depth_footstep_planner footstep_planner_complete.launch
 
 ### License
 
-This project is licensed under the *** I don't know yet *** License - see the [LICENSE.md](LICENSE.md) file for details.
+This project is licensed under the MIT License - see the [LICENSE.md](LICENSE.md) file for details.
 
 ### Acknowledgments
 This work is built on the existing ros humanoid stack packages, more details about that including the reference papers exist [ros footstep_planner](http://wiki.ros.org/footstep_planner)
